@@ -24,11 +24,16 @@ knitr::opts_chunk$set(echo = TRUE)
 stringsAsFactors = F
 
 library(dplyr)
+library(tidyr)
 library(stringr)
 library(purrr)
 library(tibble)
 library(ggplot2)
 library(ggrepel)
+dyn.load("/home/rstudio/libs/libicudata.so.67")
+dyn.load("/home/rstudio/libs/libicuuc.so.67")
+dyn.load("/home/rstudio/libs/libxml2.so.2")
+dyn.load("/home/rstudio/libs/libiconv.so.2")
 library(kableExtra)
 library(scales)
 library(tictoc)
@@ -532,61 +537,61 @@ unique.aa.dict.fp.freq = unlist(purrr::map(unique.aa.dict.fp,
 Plot the frequencies of amino acids from domain-matching peptides in CLF vs RF (Fig. 3E, left):
 
 ```{r, include=T}
-data.frame(clf = unique.aa.dict.dom.clf.freq * 100,
-           rf = unique.aa.dict.dom.rf.freq * 100,
-           aa.names = aa.names) %>%
-  ggplot(aes(x = rf, y = clf, label = aa.names)) +
-    geom_point() +
-    geom_abline(slope = 1, intercept = 0) +
-    scale_x_continuous(limits = c(0, 13), breaks = pretty_breaks(n = 13), expand = c(0, 0)) +
-    scale_y_continuous(limits = c(0, 13), breaks = pretty_breaks(n = 13), expand = c(0, 0)) +
-    ggrepel::geom_text_repel() +
-    theme_classic()
+# data.frame(clf = unique.aa.dict.dom.clf.freq * 100,
+#            rf = unique.aa.dict.dom.rf.freq * 100,
+#            aa.names = aa.names) %>%
+#   ggplot(aes(x = rf, y = clf, label = aa.names)) +
+#     geom_point() +
+#     geom_abline(slope = 1, intercept = 0) +
+#     scale_x_continuous(limits = c(0, 13), breaks = pretty_breaks(n = 13), expand = c(0, 0)) +
+#     scale_y_continuous(limits = c(0, 13), breaks = pretty_breaks(n = 13), expand = c(0, 0)) +
+#     ggrepel::geom_text_repel() +
+#     theme_classic()
 ```
 
 Plot the frequencies of amino acids from disordered region-matching peptides in CLF vs RF (Fig. 3E, right):
 
 ```{r, include=T}
-data.frame(clf = unique.aa.dict.idr.clf.freq * 100,
-           rf = unique.aa.dict.idr.rf.freq * 100,
-           aa.names = aa.names) %>%
-  ggplot(aes(x = rf, y = clf, label = aa.names)) +
-    geom_point() +
-    geom_abline(slope = 1, intercept = 0) +
-    scale_x_continuous(limits = c(0, 13), breaks = pretty_breaks(n = 13), expand = c(0, 0)) +
-    scale_y_continuous(limits = c(0, 13), breaks = pretty_breaks(n = 13), expand = c(0, 0)) +
-    ggrepel::geom_text_repel() +
-    theme_classic()
+# data.frame(clf = unique.aa.dict.idr.clf.freq * 100,
+#            rf = unique.aa.dict.idr.rf.freq * 100,
+#            aa.names = aa.names) %>%
+#   ggplot(aes(x = rf, y = clf, label = aa.names)) +
+#     geom_point() +
+#     geom_abline(slope = 1, intercept = 0) +
+#     scale_x_continuous(limits = c(0, 13), breaks = pretty_breaks(n = 13), expand = c(0, 0)) +
+#     scale_y_continuous(limits = c(0, 13), breaks = pretty_breaks(n = 13), expand = c(0, 0)) +
+#     ggrepel::geom_text_repel() +
+#     theme_classic()
 ```
 
 Plot the frequencies of amino acids in domain-matching peptides from CLF vs full proteome (Fig. S3F, left):
 
 ```{r, include=T}
-data.frame(clf = unique.aa.dict.dom.clf.freq * 100,
-           fp = unique.aa.dict.fp.freq * 100,
-           aa.names = aa.names) %>%
-  ggplot(aes(x = fp, y = clf, label = aa.names)) +
-    geom_point() +
-    geom_abline(slope = 1, intercept = 0) +
-    scale_x_continuous(limits = c(0, 13), breaks = pretty_breaks(n = 13), expand = c(0, 0)) +
-    scale_y_continuous(limits = c(0, 13), breaks = pretty_breaks(n = 13), expand = c(0, 0)) +
-    ggrepel::geom_text_repel() +
-    theme_classic()
+# data.frame(clf = unique.aa.dict.dom.clf.freq * 100,
+#            fp = unique.aa.dict.fp.freq * 100,
+#            aa.names = aa.names) %>%
+#   ggplot(aes(x = fp, y = clf, label = aa.names)) +
+#     geom_point() +
+#     geom_abline(slope = 1, intercept = 0) +
+#     scale_x_continuous(limits = c(0, 13), breaks = pretty_breaks(n = 13), expand = c(0, 0)) +
+#     scale_y_continuous(limits = c(0, 13), breaks = pretty_breaks(n = 13), expand = c(0, 0)) +
+#     ggrepel::geom_text_repel() +
+#     theme_classic()
 ```
 
 Plot the frequencies of amino acids in disordered region-matching peptides in CLF vs full proteome (Fig. S3F, right):
 
 ```{r, include=T}
-data.frame(clf = unique.aa.dict.idr.clf.freq * 100,
-           fp = unique.aa.dict.fp.freq * 100,
-           aa.names = aa.names) %>%
-  ggplot(aes(x = fp, y = clf, label = aa.names)) +
-    geom_point() +
-    geom_abline(slope = 1, intercept = 0) +
-    scale_x_continuous(limits = c(0, 13), breaks = pretty_breaks(n = 13), expand = c(0, 0)) +
-    scale_y_continuous(limits = c(0, 13), breaks = pretty_breaks(n = 13), expand = c(0, 0)) +
-    ggrepel::geom_text_repel() +
-    theme_classic()
+# data.frame(clf = unique.aa.dict.idr.clf.freq * 100,
+#            fp = unique.aa.dict.fp.freq * 100,
+#            aa.names = aa.names) %>%
+#   ggplot(aes(x = fp, y = clf, label = aa.names)) +
+#     geom_point() +
+#     geom_abline(slope = 1, intercept = 0) +
+#     scale_x_continuous(limits = c(0, 13), breaks = pretty_breaks(n = 13), expand = c(0, 0)) +
+#     scale_y_continuous(limits = c(0, 13), breaks = pretty_breaks(n = 13), expand = c(0, 0)) +
+#     ggrepel::geom_text_repel() +
+#     theme_classic()
 ```
 
 ## Find the most frequent InterPro entries
@@ -611,14 +616,14 @@ clf.ipr.matches.overlap.db_rbp.freq = clf.ipr.matches.overlap.db_rbp %>%
                                   "Disordered region",
                                   ipr.description))
 
-clf.ipr.matches.overlap.db_rbp.freq %>%
-  filter(uniprotid.freq >= 0.01) %>%
-  mutate(ipr.description = factor(ipr.description, levels = ipr.description)) %>%
-  ggplot(aes(x = ipr.description, y = uniprotid.freq)) +
-    geom_col(fill = "red") +
-    scale_y_continuous(limits = c(0, 0.5), breaks = pretty_breaks(n = 7)) +
-    theme_classic() +
-    theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5))
+# clf.ipr.matches.overlap.db_rbp.freq %>%
+#   filter(uniprotid.freq >= 0.01) %>%
+#   mutate(ipr.description = factor(ipr.description, levels = ipr.description)) %>%
+#   ggplot(aes(x = ipr.description, y = uniprotid.freq)) +
+#     geom_col(fill = "red") +
+#     scale_y_continuous(limits = c(0, 0.5), breaks = pretty_breaks(n = 7)) +
+#     theme_classic() +
+#     theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5))
 ```
 
 Write down the overall table of InterPro entry frequencies:
@@ -633,7 +638,7 @@ write.table(clf.ipr.matches.overlap.db_rbp.freq,
 
 ## Generalise (cluster) all matched InterPro entries
 
-Do an automatical clusterisation of similar InterPro entries: If two InterPro entries co-match at least once and in >=70% of co-matches they overlap by >=70% of their lengths, reciprocally, then we put them in one cluster (generalised entry). To maintain clusters, we use disjoint set union:
+Do an automatical clusterisation of similar InterPro entries matched in SPACEmap CLF: If two InterPro entries co-match at least once and in >=70% of co-matches they overlap by >=70% of their lengths, reciprocally, then we put them in one cluster (generalised entry). To maintain clusters, we use disjoint set union:
 
 ```{r, include=T}
 tic("Clusterisation of matched InterPro entries")
@@ -798,6 +803,7 @@ write.table(ipr.cluster.table,
             row.names = F)
 
 toc()
+# ~ 5 sec
 ```
 
 Name clusters that are present in the plots below, according to the InterPro entries that these clusters contain:
@@ -824,9 +830,112 @@ ipr.cluster.table = ipr.cluster.table %>%
   mutate(cluster.name = ifelse(cluster.name == "518", "MCM domain-containing", cluster.name))
 ```
 
+## Find proportions of matched and unmatched CLF peptides from DNA- and RNA-binding proteins
+
+First, find the number and proportion of all unmatched peptides from SPACEmap CLF:
+
+```{r, include=T}
+clf.matched.peptides = clf.ipr.matches.base %>%
+  mutate(int.start = as.integer(int.start),
+         int.stop = as.integer(int.stop)) %>%
+  mutate(match.peptide.overlap = (if_else(int.stop < End.position,
+                                          int.stop,
+                                          End.position) - 
+                                  if_else(int.start > Start.position,
+                                          int.start,
+                                          Start.position) >= 
+                                  -match.vicinity - 1)) %>%
+  filter(match.peptide.overlap) %>%
+  dplyr::select(Uniprot.ID, Sequence, N.term.cleavage.window, C.term.cleavage.window) %>%
+  distinct()
+
+clf.all.peptides = clf.ipr.matches.base %>%
+  dplyr::select(Uniprot.ID, Sequence, N.term.cleavage.window, C.term.cleavage.window) %>%
+  distinct()
+
+clf.unmatched.peptides = clf.all.peptides %>%
+  dplyr::anti_join(clf.matched.peptides,
+                   by = c("Uniprot.ID" = "Uniprot.ID",
+                          "Sequence" = "Sequence",
+                          "N.term.cleavage.window" = "N.term.cleavage.window",
+                          "C.term.cleavage.window" = "C.term.cleavage.window"))
+```
+
+Hence, we have `r nrow(clf.unmatched.peptides)` unmatched peptides from SPACEmap CLF (`r round(nrow(clf.unmatched.peptides) / nrow(clf.all.peptides) * 100, 1)`% of all peptides from SPACEmap CLF).
+
+Secondly, calculate the proportion of unmatched CLF peptides from DNA- and RNA-binding proteins:
+
+```{r, include=T}
+clf.matched.peptides.dbp.n = clf.ipr.matches.base %>%
+  filter(Category == "DB") %>%
+  mutate(int.start = as.integer(int.start),
+         int.stop = as.integer(int.stop)) %>%
+  mutate(match.peptide.overlap = (if_else(int.stop < End.position,
+                                          int.stop,
+                                          End.position) - 
+                                  if_else(int.start > Start.position,
+                                          int.start,
+                                          Start.position) >= 
+                                  -match.vicinity - 1)) %>%
+  filter(match.peptide.overlap) %>%
+  dplyr::select(Uniprot.ID, Sequence, N.term.cleavage.window, C.term.cleavage.window) %>%
+  distinct() %>%
+  nrow()
+
+clf.matched.peptides.rbp.n = clf.ipr.matches.base %>%
+  filter(RBP == "RBP") %>%
+  mutate(int.start = as.integer(int.start),
+         int.stop = as.integer(int.stop)) %>%
+  mutate(match.peptide.overlap = (if_else(int.stop < End.position,
+                                          int.stop,
+                                          End.position) - 
+                                  if_else(int.start > Start.position,
+                                          int.start,
+                                          Start.position) >= 
+                                  -match.vicinity - 1)) %>%
+  filter(match.peptide.overlap) %>%
+  dplyr::select(Uniprot.ID, Sequence, N.term.cleavage.window, C.term.cleavage.window) %>%
+  distinct() %>%
+  nrow()
+
+clf.all.peptides.dbp.n = clf.ipr.matches.base %>%
+  filter(Category == "DB") %>%
+  dplyr::select(Uniprot.ID, Sequence, N.term.cleavage.window, C.term.cleavage.window) %>%
+  distinct() %>%
+  nrow()
+
+clf.all.peptides.rbp.n = clf.ipr.matches.base %>%
+  filter(RBP == "RBP") %>%
+  dplyr::select(Uniprot.ID, Sequence, N.term.cleavage.window, C.term.cleavage.window) %>%
+  distinct() %>%
+  nrow()
+
+clf.matched.peptides.dbp.freq = clf.matched.peptides.dbp.n / clf.all.peptides.dbp.n
+
+clf.matched.peptides.rbp.freq = clf.matched.peptides.rbp.n / clf.all.peptides.rbp.n
+
+clf.unmatched.peptides.dbp.freq = 1 - clf.matched.peptides.dbp.freq
+
+clf.unmatched.peptides.rbp.freq = 1 - clf.matched.peptides.rbp.freq
+
+data.frame(protein.category = c("DBP", "DBP", "RBP", "RBP"),
+           peptide.category = c("Matched", "Unmatched", "Matched", "Unmatched"),
+           peptide.frequency = c(clf.matched.peptides.dbp.freq,
+                                 clf.unmatched.peptides.dbp.freq,
+                                 clf.matched.peptides.rbp.freq,
+                                 clf.unmatched.peptides.rbp.freq)) %>%
+  ggplot(aes(x = protein.category, y = peptide.frequency)) +
+    geom_col(aes(fill = peptide.category)) +
+    #scale_y_continuous(limits = c(0, 0.5), breaks = pretty_breaks(n = 7)) +
+    theme_classic() +
+    theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5))
+```
+
+So, the vast majority of peptides in both protein groups are matched, and the unmatched fractions are comparable.
+
 ## Find frequencies of cluster matches
 
-First, apply our clusterisation to the main table with matches and peptides:
+First, apply our clusterisation to the main table with matched CLf peptides from DNA- and RNA-binding proteins:
 
 ```{r, include=T}
 clf.ipr.matches.overlap.db_rbp.collated = clf.ipr.matches.overlap.db_rbp %>%
@@ -867,15 +976,15 @@ write.table(clf.ipr.matches.overlap.db_rbp.collated.db_freq,
             sep = "\t",
             row.names = F)
 
-clf.ipr.matches.overlap.db_rbp.collated.db_freq %>%
-  head(10) %>%
-  mutate(ipr.description = factor(ipr.description, levels = ipr.description)) %>%
-  mutate(uniprotid.freq = uniprotid.freq * 100) %>%
-  ggplot(aes(x = ipr.description, y = uniprotid.freq)) +
-    geom_col(fill = "dark green") +
-    scale_y_continuous(limits = c(0, 60), breaks = pretty_breaks(n = 7)) +
-    theme_classic() +
-    theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5))
+# clf.ipr.matches.overlap.db_rbp.collated.db_freq %>%
+#   head(10) %>%
+#   mutate(ipr.description = factor(ipr.description, levels = ipr.description)) %>%
+#   mutate(uniprotid.freq = uniprotid.freq * 100) %>%
+#   ggplot(aes(x = ipr.description, y = uniprotid.freq)) +
+#     geom_col(fill = "dark green") +
+#     scale_y_continuous(limits = c(0, 60), breaks = pretty_breaks(n = 7)) +
+#     theme_classic() +
+#     theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5))
 ```
 
 For the RNA-binding proteins (Fig. 3D; Fig. S3D, left):
@@ -906,15 +1015,15 @@ write.table(clf.ipr.matches.overlap.db_rbp.collated.rbp_freq,
             sep = "\t",
             row.names = F)
 
-clf.ipr.matches.overlap.db_rbp.collated.rbp_freq %>%
-  head(10) %>%
-  mutate(ipr.description = factor(ipr.description, levels = ipr.description)) %>%
-  mutate(uniprotid.freq = uniprotid.freq * 100) %>%
-  ggplot(aes(x = ipr.description, y = uniprotid.freq)) +
-    geom_col(fill = "purple") +
-    scale_y_continuous(limits = c(0, 50), breaks = pretty_breaks(n = 7)) +
-    theme_classic() +
-    theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5))
+# clf.ipr.matches.overlap.db_rbp.collated.rbp_freq %>%
+#   head(10) %>%
+#   mutate(ipr.description = factor(ipr.description, levels = ipr.description)) %>%
+#   mutate(uniprotid.freq = uniprotid.freq * 100) %>%
+#   ggplot(aes(x = ipr.description, y = uniprotid.freq)) +
+#     geom_col(fill = "purple") +
+#     scale_y_continuous(limits = c(0, 50), breaks = pretty_breaks(n = 7)) +
+#     theme_classic() +
+#     theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5))
 ```
 
 For the peptides from DNA-binding proteins (Fig. S3E, right):
@@ -955,15 +1064,15 @@ write.table(clf.ipr.matches.overlap.db_rbp.collated.db_freq.peptides,
             sep = "\t",
             row.names = F)
 
-clf.ipr.matches.overlap.db_rbp.collated.db_freq.peptides %>%
-  head(10) %>%
-  mutate(ipr.description = factor(ipr.description, levels = ipr.description)) %>%
-  mutate(peptide.id.freq = peptide.id.freq * 100) %>%
-  ggplot(aes(x = ipr.description, y = peptide.id.freq)) +
-    geom_col(fill = "dark green") +
-    scale_y_continuous(limits = c(0, 40), breaks = pretty_breaks(n = 5)) +
-    theme_classic() +
-    theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5))
+# clf.ipr.matches.overlap.db_rbp.collated.db_freq.peptides %>%
+#   head(10) %>%
+#   mutate(ipr.description = factor(ipr.description, levels = ipr.description)) %>%
+#   mutate(peptide.id.freq = peptide.id.freq * 100) %>%
+#   ggplot(aes(x = ipr.description, y = peptide.id.freq)) +
+#     geom_col(fill = "dark green") +
+#     scale_y_continuous(limits = c(0, 40), breaks = pretty_breaks(n = 5)) +
+#     theme_classic() +
+#     theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5))
 ```
 
 For the peptides from RNA-binding proteins (Fig. S3D, right):
@@ -1004,15 +1113,15 @@ write.table(clf.ipr.matches.overlap.db_rbp.collated.rbp_freq.peptides,
             sep = "\t",
             row.names = F)
 
-clf.ipr.matches.overlap.db_rbp.collated.rbp_freq.peptides %>%
-  head(10) %>%
-  mutate(ipr.description = factor(ipr.description, levels = ipr.description)) %>%
-  mutate(peptide.id.freq = peptide.id.freq * 100) %>%
-  ggplot(aes(x = ipr.description, y = peptide.id.freq)) +
-    geom_col(fill = "purple") +
-    scale_y_continuous(limits = c(0, 30), breaks = pretty_breaks(n = 5)) +
-    theme_classic() +
-    theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5))
+# clf.ipr.matches.overlap.db_rbp.collated.rbp_freq.peptides %>%
+#   head(10) %>%
+#   mutate(ipr.description = factor(ipr.description, levels = ipr.description)) %>%
+#   mutate(peptide.id.freq = peptide.id.freq * 100) %>%
+#   ggplot(aes(x = ipr.description, y = peptide.id.freq)) +
+#     geom_col(fill = "purple") +
+#     scale_y_continuous(limits = c(0, 30), breaks = pretty_breaks(n = 5)) +
+#     theme_classic() +
+#     theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5))
 ```
 
 Write down the table of generalised entries:
@@ -1023,4 +1132,359 @@ write.table(ipr.cluster.table,
             quote = F,
             sep = "\t",
             row.names = F)
+```
+
+## Compare amino acid frequencies in IDRs from DNA- and RNA-binding proteins
+
+Compare amino acids from IDR matches in peptides from DNA- and RNA-binding proteins:
+
+```{r, include=T}
+# Frequencies of amino acids in disordered region-matching peptides from DNA-binding proteins in CLF 
+clf.ipr.matches.overlap.db.sequences.idr = clf.ipr.matches.overlap.db_rbp %>%
+  filter(Category == "DB") %>%
+  filter(ipr.accession == "") %>% # select peptides with matches to disordered regions
+  dplyr::select(Uniprot.ID,
+                Sequence, 
+                N.term.cleavage.window,
+                C.term.cleavage.window) %>%
+  distinct() %>%
+  pull(Sequence)
+
+unique.aa.dict.idr.db.clf = count_aas(purrr::reduce(clf.ipr.matches.overlap.db.sequences.idr, paste0))
+unique.aa.dict.idr.db.clf.sum = sum(unique.aa.dict.idr.db.clf)
+unique.aa.dict.idr.db.clf.freq = unlist(purrr::map(unique.aa.dict.idr.db.clf, 
+                                                   function(x) {
+                                                     x / unique.aa.dict.idr.db.clf.sum
+                                                   }))
+
+# Frequencies of amino acids in disordered region-matching peptides from RNA-binding proteins in CLF 
+clf.ipr.matches.overlap.rbp.sequences.idr = clf.ipr.matches.overlap.db_rbp %>%
+  filter(RBP == "RBP") %>%
+  filter(ipr.accession == "") %>% # select peptides with matches to disordered regions
+  dplyr::select(Uniprot.ID,
+                Sequence, 
+                N.term.cleavage.window,
+                C.term.cleavage.window) %>%
+  distinct() %>%
+  pull(Sequence)
+
+unique.aa.dict.idr.rbp.clf = count_aas(purrr::reduce(clf.ipr.matches.overlap.rbp.sequences.idr, paste0))
+unique.aa.dict.idr.rbp.clf.sum = sum(unique.aa.dict.idr.rbp.clf)
+unique.aa.dict.idr.rbp.clf.freq = unlist(purrr::map(unique.aa.dict.idr.rbp.clf, 
+                                                   function(x) {
+                                                     x / unique.aa.dict.idr.rbp.clf.sum
+                                                   }))
+```
+
+Plot the frequencies of amino acids in disordered region-matching peptides in DBPs vs RBPs:
+
+```{r, include=T}
+data.frame(dbp = unique.aa.dict.idr.db.clf.freq * 100,
+           rbp = unique.aa.dict.idr.rbp.clf.freq * 100,
+           aa.names = aa.names) %>%
+  ggplot(aes(x = dbp, y = rbp, label = aa.names)) +
+    geom_point() +
+    geom_abline(slope = 1, intercept = 0) +
+    scale_x_continuous(limits = c(0, 14), breaks = pretty_breaks(n = 14), expand = c(0, 0)) +
+    scale_y_continuous(limits = c(0, 14), breaks = pretty_breaks(n = 14), expand = c(0, 0)) +
+    ggrepel::geom_text_repel() +
+    theme_classic()
+```
+
+Hence, IDRs from RBPs tend to contain more alanine (A) and glutamic acid (E), while IDRs in DBPs tend to have more proline (P) and serine (S).
+
+## Compare top structural domain types in DNA- and RNA-binding proteins
+
+Take top 5 structural domain types (the general clusters that we found above) in DNA- and RNA-binding proteins and compare their abundance in both groups:
+
+```{r, include=T}
+# Select top 5 matched domain types from DBPs and RBPs, and merge these domain types in one set
+# Let us exclude disordered region matches as here we are interested in domains
+top.matched.domains = unique(c(clf.ipr.matches.overlap.db_rbp.collated.db_freq.peptides %>%
+                                 arrange(desc(peptide.id.freq)) %>%
+                                 head(6) %>% # 5 without IDRs
+                                 pull(ipr.description),
+                               clf.ipr.matches.overlap.db_rbp.collated.rbp_freq.peptides %>%
+                                 arrange(desc(peptide.id.freq)) %>%
+                                 head(6) %>% # 5 without IDRs
+                                 pull(ipr.description)))
+
+freq.in.dbp_rbp = clf.ipr.matches.overlap.db_rbp.collated.db_freq.peptides %>%
+  filter(ipr.description %in% top.matched.domains) %>%
+  dplyr::rename("peptide.id.n.dbp" = "peptide.id.n",
+                "peptide.id.freq.dbp" = "peptide.id.freq") %>%
+  dplyr::select(-ipr.accession) %>%
+  dplyr::full_join(clf.ipr.matches.overlap.db_rbp.collated.rbp_freq.peptides %>%
+                     filter(ipr.description %in% top.matched.domains) %>%
+                     dplyr::rename("peptide.id.n.rbp" = "peptide.id.n",
+                                   "peptide.id.freq.rbp" = "peptide.id.freq") %>%
+                     dplyr::select(-ipr.accession),
+                   by = c("ipr.description" = "ipr.description")) %>%
+  tidyr::replace_na(list(peptide.id.n.dbp = 0, 
+                         peptide.id.freq.dbp = 0,
+                         peptide.id.n.rbp = 0,
+                         peptide.id.freq.rbp = 0)) %>%
+  arrange(desc(peptide.id.freq.dbp)) %>%
+  filter(ipr.description != "Disordered region")
+
+top.matched.domains.ordered = freq.in.dbp_rbp$ipr.description
+
+# Plot the top 5 matched domain types, sorted by decreasing abundance in DBPs
+data.frame(domain.type = rep(top.matched.domains.ordered, 2),
+           protein.category = c(rep("DBP", length(top.matched.domains.ordered)), 
+                                rep("RBP", length(top.matched.domains.ordered))),
+           peptide.freq = c(freq.in.dbp_rbp$peptide.id.freq.dbp,
+                            freq.in.dbp_rbp$peptide.id.freq.rbp)) %>%
+  mutate(domain.type = factor(domain.type, levels = top.matched.domains.ordered)) %>%
+  mutate(peptide.freq = peptide.freq * 100) %>%
+  ggplot(aes(x = domain.type, y = peptide.freq)) +
+    geom_col(aes(fill = protein.category), position = "dodge2") +
+    scale_y_continuous(limits = c(0, 12), breaks = pretty_breaks(n = 7)) +
+    theme_classic() +
+    theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5))
+```
+...
+
+Hence, the P-loop-related domain structures are equally frequent in DBPs and RBPs, which matches previously published results ([Romero et al., 2018](https://www.pnas.org/content/115/51/E11943)). 
+
+RRM is more abundant in RBPs than in DBPs, which corresponds to its definition as an RNA recognition motif. However, its abundance in DBPs is comparable, which matches the known ability of RRM to bind both RNA and ssDNA ().
+
+---
+
+Overall, looking at the protein-level figure, panel C, disordered regions are more frequent in DNA-binding than in RNA-binding proteins. Winged-helix, C2H2 zinc finger, and SANT/Myb domain-like matches are also more frequent in the DNA-binding proteins, which could make sense, as domains of these types are very widespread in transcription factors in general, but I’m not sure how abundant they could be in RNA-binding proteins. Interestingly, RING/FYVE/PHD zinc finger domains are more frequent in the DNA-binding proteins, although these types of zinc fingers are not usually considered to be DNA-binding (see, for example, IPR001965 for PHD and IPR011011 for FYVE). However, this general entry also contains the extended PHD (ePHD) which is known to be able to bind double-stranded DNA (see IPR034732). Surprisingly, the OB fold-like general entry is also more frequent in the DNA-binding proteins, although its comprising specific entries look more like RNA-binding (domains from different ribosomal proteins; S1 domain is thought to be RNA-binding: IPR003029). On the other hand, it also contains the cold shock domain which is known to bind DNA (see IPR002059) and, according to InterPro, is very similar to the RNA-binding S1 domain. So, this OB-fold structure should allow both DNA- and RNA-binding.
+
+In contrast, RRM and Armadillo fold-related domains are much more frequent in RNA-binding proteins. RRM is an RNA-binding domain by definition, and the Armadillo fold is a very general type of protein structure which, according to InterPro, has “an extensive solvent-accessible surface that is well suited to binding large substrates such as proteins and nucleic acids.” Furthermore, many of the specific entries from this general entry are indeed related to RNA metabolism: (1) the W2 domain (IPR003307) and the MIF4G domains (see, for example, IPR003890) come from translation factors (and MIF4G is also known to function in the nonsense-mediated mRNA decay); (2) “DNA polymerase V/Myb-binding protein 1A” (IPR007015) and “Nucleolar pre-ribosomal-associated protein 1, C-terminal domain” (IPR032436) localise to nucleolus where rRNA is produced; (3) “Pumilio homology domain” (IPR033133) is a known RNA-binding domain.
+
+---
+
+## Study unmatched CLF peptides from SPACEmap
+
+Unmatched CLF peptides from SPACEmap may have motifs representing as yet undiscovered domains. Let us scan the unmatched peptide sequences with MeMe. For this, we need to prepare the sequences first: (a) merge N- and C-terminal flanks with the peptide sequences by overlaps (so that if a motif goes into flanks, it would be captured); (b) merge the combined sequences from the same protein by overlaps (we want to avoid a situation when a motif is deemed significant just because it is constructed from overlapping peptide sequences); (c) filter out sequences that are shorter than 8 amino acids (MEME's threshold for sequence length). Let us prepare the sequences:
+
+```{r, include=T}
+# Merge two strings by an overlap or concatenate them if there is no overlap
+str_merge = function(str1, str2) {
+  if ((str1 == "") & (str2 == "")) {
+    return("")
+  }
+  if (str1 == "") {
+    return(str2)
+  }
+  if (str2 == "") {
+    return(str1)
+  }
+  if (stringr::str_detect(str1, fixed(str2))) {
+    return(str1)
+  }
+  if (stringr::str_detect(str2, fixed(str1))) {
+    return(str2)
+  }
+  str1_length = nchar(str1)
+  str2_length = nchar(str2)
+  max_prefix_coordinate = 0
+  for (i in seq(0, min(str1_length, str2_length) - 1)) {
+    if (substr(str1, str1_length - i, str1_length) == substr(str2, 1, i + 1)) {
+      max_prefix_coordinate = i + 1
+    }
+  }
+  if (max_prefix_coordinate == 0) {
+    return(paste0(str1, str2))
+  }
+  return(paste0(str1, substr(str2, max_prefix_coordinate + 1, str2_length)))
+}
+
+# Assemble sequences by overlaps
+calc_str_merge = function(str1, str2) {
+  if (stringr::str_detect(str1, fixed(str2))) {
+    return(list("length" = nchar(str2),
+                "merge" = str1))
+  }
+  if (stringr::str_detect(str2, fixed(str1))) {
+    return(list("length" = nchar(str1),
+                "merge" = str2))
+  }
+  str1_length = nchar(str1)
+  str2_length = nchar(str2)
+  max_prefix_coordinate = 0
+  for (i in seq(0, min(str1_length, str2_length) - 1)) {
+    if (substr(str1, str1_length - i, str1_length) == substr(str2, 1, i + 1)) {
+      max_prefix_coordinate = i + 1
+    }
+  }
+  return(list("length" = max_prefix_coordinate,
+              "merge" = paste0(str1, substr(str2, max_prefix_coordinate + 1, str2_length))))
+}
+
+merge_sequences = function(sequence.lead, sequence.lag) {
+  merge.list.lead.lag = calc_str_merge(sequence.lead, sequence.lag)
+  merge.list.lag.lead = calc_str_merge(sequence.lag, sequence.lead)
+  if (merge.list.lead.lag[["length"]] >= merge.list.lag.lead[["length"]]) {
+    return(merge.list.lead.lag)
+  }
+  return(merge.list.lag.lead)
+}
+
+assemble_by_overlaps = function(uniprotid,
+                                input.sequences) {
+  if (length(input.sequences) == 1) {
+    return(data.frame(Uniprot.ID = uniprotid, 
+                      contigs = input.sequences[1], 
+                      status = "original",
+                      stringsAsFactors = F))
+  }
+  overlap.size.cutoff = 5
+  sequences.to.assemble = input.sequences
+  contigs.to.report = c()
+  status.list = list()
+  for (input.sequence in input.sequences) {
+    status.list[[input.sequence]] = "original"
+  }
+  contig.status.list = list()
+  while (length(sequences.to.assemble) > 1) {
+    cat("=========\n")
+    cat("sequences.to.assemble:\n")
+    cat(sequences.to.assemble, "\n")
+    sequence.lead = sequences.to.assemble[1]
+    cat("sequence.lead: ", sequence.lead, "\n")
+    max.overlap.length = 0
+    max.overlap.index = 0
+    max.overlap.sequence.lag = ""
+    max.overlap.merge = ""
+    cat(uniprotid, "\n")
+    for (lag.i in 2:(length(sequences.to.assemble))) {
+      sequence.lag = sequences.to.assemble[lag.i]
+      cat("sequence.lag: ", sequence.lag, "\n")
+      merge.list = merge_sequences(sequence.lead, sequence.lag)
+      cat("merge.list: ")
+      str(merge.list)
+      cat("\n")
+      overlap.length = merge.list[["length"]]
+      overlap.merge = merge.list[["merge"]]
+      cat("overlap.length: ")
+      str(overlap.length)
+      cat("\n")
+      cat("overlap.merge: ")
+      str(overlap.merge)
+      cat("\n")
+      if (overlap.length > max.overlap.length) {
+        max.overlap.length = overlap.length
+        max.overlap.index = lag.i
+        max.overlap.sequence.lag = sequence.lag
+        max.overlap.merge = overlap.merge
+      }
+    }
+    if (max.overlap.length >= overlap.size.cutoff) {
+      sequences.to.assemble = sequences.to.assemble[-max.overlap.index]
+      status.list[[max.overlap.sequence.lag]] = NULL
+      sequences.to.assemble = sequences.to.assemble[-1]
+      status.list[[sequence.lead]] = NULL
+      sequences.to.assemble[length(sequences.to.assemble) + 1] = max.overlap.merge
+      status.list[[max.overlap.merge]] = "merged"
+    } else {
+      sequences.to.assemble = sequences.to.assemble[-1]
+      contigs.to.report[length(contigs.to.report) + 1] = sequence.lead
+      contig.status.list[length(contig.status.list) + 1] = status.list[[sequence.lead]]
+      status.list[[sequence.lead]] = NULL
+    }
+  }
+  contigs.to.report[length(contigs.to.report) + 1] = sequences.to.assemble[1]
+  contig.status.list[length(contig.status.list) + 1] = status.list[1]
+  
+  return(data.frame(Uniprot.ID = rep(uniprotid, length(sequences.to.assemble)), 
+                    contigs = contigs.to.report, #sequences.to.assemble, 
+                    status = unlist(contig.status.list), #unlist(status.list),
+                    stringsAsFactors = F))
+}
+
+# Just one sequence
+# unmatched.peptides.remainder.test = data.frame(peptide.sequence = c("HLTSTCQWQRDVYAKGDGFQIYLRKQGYHSNSLSEEESL"),
+#                                                Uniprot.ID = rep("A2A3V1", 1),
+#                                                stringsAsFactors = F)
+
+# No overlaps between two sequences
+# unmatched.peptides.remainder.test = data.frame(peptide.sequence = c("HLTSTCQWQRDVYAKGDGFQIYLRKQGYHSNSLSEEESL",
+#                                                                     "TRKKRRLTSGMFDQNVKYRPLHMPSMPPKRAR"),
+#                                                Uniprot.ID = rep("A2A3V1", 2),
+#                                                stringsAsFactors = F)
+
+# Overlap is not long enough => no overlap detected
+# unmatched.peptides.remainder.test = data.frame(peptide.sequence = c("HLTSTCQWQRDVYAKGDGFQIYLRKQGYHSNSLSEEESL",
+#                                                                     "EESLSTTRKKRRLTSGMFDQNVKYRPLHMPSMPPKRAR"),
+#                                                Uniprot.ID = rep("A2A3V1", 2),
+#                                                stringsAsFactors = F)
+
+# Overlap of two sequences
+# unmatched.peptides.remainder.test = data.frame(peptide.sequence = c("HLTSTCQWQRDVYAKGDGFQIYLRKQGYHSNSLSEEESL",
+#                                                                     "SLSEEESLSTTRKKRRLTSGMFDQNVKYRPLHMPSMPPKRAR"),
+#                                                Uniprot.ID = rep("A2A3V1", 2),
+#                                                stringsAsFactors = F)
+
+# No overlaps in three sequences
+# unmatched.peptides.remainder.test = data.frame(peptide.sequence = c("HLTSTCQWQRDVYAKGDGFQIYLRKQGYHS",
+#                                                                     "SLSEEESLSTTRKKRRLTSGMFDQNVKYRPLHMPSMPPKRAR",
+#                                                                     "SLTTRKRTTAVYYNNN"),
+#                                                Uniprot.ID = rep("A2A3V1", 3),
+#                                                stringsAsFactors = F)
+
+# Overlap of three sequences
+# unmatched.peptides.remainder.test = data.frame(peptide.sequence = c("HLTSTCQWQRDVYAKGDGFQIYLRKQGYHSNSLSEEESL",
+#                                                                     "SLSEEESLSTTRKKRRLTSGMFDQNVKYRPLHMPSMPPKRAR",
+#                                                                     "MPSMPPKRARSLTTRKRTTAVYYNNN"),
+#                                                Uniprot.ID = rep("A2A3V1", 3),
+#                                                stringsAsFactors = F)
+
+# Overlap of two sequences out of three
+# unmatched.peptides.remainder.test = data.frame(peptide.sequence = c("HLTSTCQWQRDVYAKGDGFQIYLRKQGYHSNSLSEEESL",
+#                                                                     "SLSEEESLSTTRKKRRLTSGMFDQNVKYRPLHMPSMPPKRAR",
+#                                                                     "SLTTRKRTTAVYYNNN"),
+#                                                Uniprot.ID = rep("A2A3V1", 3),
+#                                                stringsAsFactors = F)
+
+# Overlaps: (2, 4, 1), (3, 5); 6 does not overlap with any other sequence
+# unmatched.peptides.remainder.test = data.frame(peptide.sequence = c("MPSMPPKRARSLTTRKRTTAVYYNNN",
+#                                                                     "HLTSTCQWQRDVYAKGDGFQIYLRKQGYHSNSLSEEESL",
+#                                                                     "AAGNNYHRTHADEEF",
+#                                                                     "SLSEEESLSTTRKKRRLTSGMFDQNVKYRPLHMPSMPPKRAR",
+#                                                                     "THADEEFTRRGHTRTHGR",
+#                                                                     "YYYNNTGTFGTNNNYYY"),
+#                                                Uniprot.ID = rep("A2A3V1", 6),
+#                                                stringsAsFactors = F)
+
+# Overlaps: (2, 4, 1); 3 does not overlap with any other sequence
+# unmatched.peptides.remainder.test = data.frame(peptide.sequence = c("MPSMPPKRARSLTTRKRTTAVYYNNN",
+#                                                                     "HLTSTCQWQRDVYAKGDGFQIYLRKQGYHSNSLSEEESL",
+#                                                                     "AAGNNYHRTHADEEF",
+#                                                                     "SLSEEESLSTTRKKRRLTSGMFDQNVKYRPLHMPSMPPKRAR"),
+#                                                Uniprot.ID = rep("A2A3V1", 4),
+#                                                stringsAsFactors = F)
+
+# Overlaps: (3, 1); (2, 4)
+# unmatched.peptides.remainder.test = data.frame(peptide.sequence = c("MPSMPPKRARSLTTRKRTTAVYYNNN",
+#                                                                     "AAGNNYHRTHADEEF",
+#                                                                     "SLSEEESLSTTRKKRRLTSGMFDQNVKYRPLHMPSMPPKRAR",
+#                                                                     "THADEEFTRRGHTRTHGR"),
+#                                                Uniprot.ID = rep("A2A3V1", 4),
+#                                                stringsAsFactors = F)
+
+unmatched.remainder.crosslinked.test = dplyr::bind_rows(purrr::map(unmatched.peptides.remainder.test %>%
+                                                                pull(Uniprot.ID) %>%
+                                                                unique(),
+                                                              function(uniprotid) {
+                                                                assemble_by_overlaps(uniprotid,
+                                                                                     unmatched.peptides.remainder.test %>%
+                                                                                       filter(Uniprot.ID == uniprotid) %>%
+                                                                                       pull(peptide.sequence))
+                                                              }))
+unmatched.remainder.crosslinked.test
+
+#   group_by(Uniprot.ID,
+#            Sequence,
+#            N.term.cleavage.window,
+#            C.term.cleavage.window) %>%
+#   do(mutate(., peptide.sequence = str_merge(
+#                                     str_merge(
+#                                       stringr::str_replace_all(.$N.term.cleavage.window, "_", ""),
+#                                       stringr::str_replace_all(.$Sequence, "_", "")),
+#                                     stringr::str_replace_all(.$C.term.cleavage.window, "_", "")))) %>%
+#   ungroup()
 ```

@@ -3,4 +3,5 @@ libs
 containers
 output
 SPACEmap_peptide_analysis_final_original.Rmd
-
+.DS_Store
+output.prev.add/
