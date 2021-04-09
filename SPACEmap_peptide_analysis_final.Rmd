@@ -254,7 +254,7 @@ sp.sp2.intersection.peptides.matched = sp.sp2.intersection.peptides %>%
   distinct()
 ```
 
-Hence, the proportion of matched peptides in all shared peptides is `r nrow(sp.sp2.intersection.peptides.matched) / nrow(sp.sp2.intersection.peptides)`.
+Hence, the proportion of matched peptides in all shared proteins is `r nrow(sp.sp2.intersection.peptides.matched) / nrow(sp.sp2.intersection.peptides)`.
 
 Write down the tables of shared peptides (all and matched):
 
@@ -638,7 +638,7 @@ write.table(clf.ipr.matches.overlap.db_rbp.freq,
 
 ## Generalise (cluster) all matched InterPro entries
 
-Do an automatical clusterisation of similar InterPro entries matched in SPACEmap CLF: If two InterPro entries co-match at least once and in >=70% of co-matches they overlap by >=70% of their lengths, reciprocally, then we put them in one cluster (generalised entry). To maintain clusters, we use disjoint set union:
+Do an automatical clusterisation of similar InterPro entries matched in CLF peptides (from DBPs and RBPs) shared between SPACEmap and SPACE: If two InterPro entries co-match at least once and in >=70% of co-matches they overlap by >=70% of their lengths, reciprocally, then we put them in one cluster (generalised entry). To maintain clusters, we use disjoint set union:
 
 ```{r, include=T}
 tic("Clusterisation of matched InterPro entries")
@@ -832,7 +832,7 @@ ipr.cluster.table = ipr.cluster.table %>%
 
 ## Find proportions of matched and unmatched CLF peptides from DNA- and RNA-binding proteins
 
-First, find the number and proportion of all unmatched peptides from SPACEmap CLF:
+First, find the number and proportion of all unmatched CLF peptides (from DBPs and RBPs) shared between SPACEmap and SPACE:
 
 ```{r, include=T}
 clf.matched.peptides = clf.ipr.matches.base %>%
@@ -932,6 +932,76 @@ data.frame(protein.category = c("DBP", "DBP", "RBP", "RBP"),
 ```
 
 So, the vast majority of peptides in both protein groups are matched, and the unmatched fractions are comparable.
+
+Calculate the proportion of unmatched DNA- and RNA-binding proteins:
+
+```{r, include=T}
+clf.matched.proteins.dbp.n = clf.ipr.matches.base %>%
+  filter(Category == "DB") %>%
+  mutate(int.start = as.integer(int.start),
+         int.stop = as.integer(int.stop)) %>%
+  mutate(match.peptide.overlap = (if_else(int.stop < End.position,
+                                          int.stop,
+                                          End.position) - 
+                                  if_else(int.start > Start.position,
+                                          int.start,
+                                          Start.position) >= 
+                                  -match.vicinity - 1)) %>%
+  filter(match.peptide.overlap) %>%
+  pull(Uniprot.ID) %>%
+  unique() %>%
+  length()
+
+clf.matched.proteins.rbp.n = clf.ipr.matches.base %>%
+  filter(RBP == "RBP") %>%
+  mutate(int.start = as.integer(int.start),
+         int.stop = as.integer(int.stop)) %>%
+  mutate(match.peptide.overlap = (if_else(int.stop < End.position,
+                                          int.stop,
+                                          End.position) - 
+                                  if_else(int.start > Start.position,
+                                          int.start,
+                                          Start.position) >= 
+                                  -match.vicinity - 1)) %>%
+  filter(match.peptide.overlap) %>%
+  pull(Uniprot.ID) %>%
+  unique() %>%
+  length()
+
+clf.all.proteins.dbp.n = clf.ipr.matches.base %>%
+  filter(Category == "DB") %>%
+  pull(Uniprot.ID) %>%
+  unique() %>%
+  length()
+
+clf.all.proteins.rbp.n = clf.ipr.matches.base %>%
+  filter(RBP == "RBP") %>%
+  pull(Uniprot.ID) %>%
+  unique() %>%
+  length()
+
+clf.matched.proteins.dbp.freq = clf.matched.proteins.dbp.n / clf.all.proteins.dbp.n
+
+clf.matched.proteins.rbp.freq = clf.matched.proteins.rbp.n / clf.all.proteins.rbp.n
+
+clf.unmatched.proteins.dbp.freq = 1 - clf.matched.proteins.dbp.freq
+
+clf.unmatched.proteins.rbp.freq = 1 - clf.matched.proteins.rbp.freq
+
+data.frame(protein.category = c("DBP", "DBP", "RBP", "RBP"),
+           match.category = c("Matched", "Unmatched", "Matched", "Unmatched"),
+           protein.frequency = c(clf.matched.proteins.dbp.freq,
+                                 clf.unmatched.proteins.dbp.freq,
+                                 clf.matched.proteins.rbp.freq,
+                                 clf.unmatched.proteins.rbp.freq)) %>%
+  ggplot(aes(x = protein.category, y = protein.frequency)) +
+    geom_col(aes(fill = match.category)) +
+    #scale_y_continuous(limits = c(0, 0.5), breaks = pretty_breaks(n = 7)) +
+    theme_classic() +
+    theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5))
+```
+
+Hence, almost all DNA- and RNA-binding proteins contain at least one matched peptide.
 
 ## Find frequencies of cluster matches
 
@@ -1243,17 +1313,26 @@ data.frame(domain.type = rep(top.matched.domains.ordered, 2),
     theme_classic() +
     theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5))
 ```
-...
 
-Hence, the P-loop-related domain structures are equally frequent in DBPs and RBPs, which matches previously published results ([Romero et al., 2018](https://www.pnas.org/content/115/51/E11943)). 
+Interestingly, the P-loop-related domains are the top matches, equally frequent in DBPs and RBPs. Although P-loops have been known for a long time as NTP-binding motifs frequently present in various NTP hydrolases ([Vetter and Wittinghofer, 1999](https://www.cambridge.org/core/journals/quarterly-reviews-of-biophysics/article/nucleoside-triphosphatebinding-proteins-different-scaffolds-to-achieve-phosphoryl-transfer/DCF7EEE392136BE87CD82FF3AAD866EC)), recently ([Romero et al., 2018](https://www.pnas.org/content/115/51/E11943)) showed that P-loops can also bind DNA and RNA. The second most frequent match, RNA recognition motif (RRM), is more abundant in RBPs, but is also comparably frequent in DBPs. This may be explained by the fact that RRM can also bind single-strand DNA ([Ding et al., 1999](http://genesdev.cshlp.org/content/13/9/1102.long)). The next two domain types, MCM domain-containing and helix-turn-helix (HTH), prevail in DBPs, which corresponds to the prominent roles of these domains in ... 
 
-RRM is more abundant in RBPs than in DBPs, which corresponds to its definition as an RNA recognition motif. However, its abundance in DBPs is comparable, which matches the known ability of RRM to bind both RNA and ssDNA ().
+The following three general domain types are more abundant in DBPs: 
 
----
+MCM-containing: ...
 
-Overall, looking at the protein-level figure, panel C, disordered regions are more frequent in DNA-binding than in RNA-binding proteins. Winged-helix, C2H2 zinc finger, and SANT/Myb domain-like matches are also more frequent in the DNA-binding proteins, which could make sense, as domains of these types are very widespread in transcription factors in general, but I’m not sure how abundant they could be in RNA-binding proteins. Interestingly, RING/FYVE/PHD zinc finger domains are more frequent in the DNA-binding proteins, although these types of zinc fingers are not usually considered to be DNA-binding (see, for example, IPR001965 for PHD and IPR011011 for FYVE). However, this general entry also contains the extended PHD (ePHD) which is known to be able to bind double-stranded DNA (see IPR034732). Surprisingly, the OB fold-like general entry is also more frequent in the DNA-binding proteins, although its comprising specific entries look more like RNA-binding (domains from different ribosomal proteins; S1 domain is thought to be RNA-binding: IPR003029). On the other hand, it also contains the cold shock domain which is known to bind DNA (see IPR002059) and, according to InterPro, is very similar to the RNA-binding S1 domain. So, this OB-fold structure should allow both DNA- and RNA-binding.
+HTH matches are also more frequent in the DNA-binding proteins, which could make sense, as domains of these types are very widespread in transcription factors in general, but I’m not sure how abundant they could be in RNA-binding proteins. 
 
-In contrast, RRM and Armadillo fold-related domains are much more frequent in RNA-binding proteins. RRM is an RNA-binding domain by definition, and the Armadillo fold is a very general type of protein structure which, according to InterPro, has “an extensive solvent-accessible surface that is well suited to binding large substrates such as proteins and nucleic acids.” Furthermore, many of the specific entries from this general entry are indeed related to RNA metabolism: (1) the W2 domain (IPR003307) and the MIF4G domains (see, for example, IPR003890) come from translation factors (and MIF4G is also known to function in the nonsense-mediated mRNA decay); (2) “DNA polymerase V/Myb-binding protein 1A” (IPR007015) and “Nucleolar pre-ribosomal-associated protein 1, C-terminal domain” (IPR032436) localise to nucleolus where rRNA is produced; (3) “Pumilio homology domain” (IPR033133) is a known RNA-binding domain.
+Surprisingly, the OB fold-like general entry is also more frequent in the DNA-binding proteins, although its comprising specific entries look more like RNA-binding (domains from different ribosomal proteins; S1 domain is thought to be RNA-binding: IPR003029). On the other hand, it also contains the cold shock domain which is known to bind DNA (see IPR002059) and, according to InterPro, is very similar to the RNA-binding S1 domain. So, this OB-fold structure should allow both DNA- and RNA-binding.
+
+Other general domain types are more abundant in RBPs:
+
+RRM is more abundant in RBPs than in DBPs, which corresponds to its definition as an RNA recognition motif. However, its abundance in DBPs is comparable, which matches the known ability of RRM to bind both RNA and ssDNA ([Ding et al., 1999](http://genesdev.cshlp.org/content/13/9/1102.long)). 
+
+The armadillo fold is a very general type of protein structure which, according to InterPro, has “an extensive solvent-accessible surface that is well suited to binding large substrates such as proteins and nucleic acids.” Furthermore, many of the specific entries from this general entry are indeed related to RNA metabolism: (1) the W2 domain (IPR003307) and the MIF4G domains (see, for example, IPR003890) come from translation factors (and MIF4G is also known to function in the nonsense-mediated mRNA decay); (2) “DNA polymerase V/Myb-binding protein 1A” (IPR007015) and “Nucleolar pre-ribosomal-associated protein 1, C-terminal domain” (IPR032436) localise to nucleolus where rRNA is produced; (3) “Pumilio homology domain” (IPR033133) is a known RNA-binding domain. 
+
+WC40/YVTN-containing: ...
+
+DEAD-box-related: ...
 
 ---
 
@@ -1341,31 +1420,31 @@ assemble_by_overlaps = function(uniprotid,
   }
   contig.status.list = list()
   while (length(sequences.to.assemble) > 1) {
-    cat("=========\n")
-    cat("sequences.to.assemble:\n")
-    cat(sequences.to.assemble, "\n")
+    #cat("=========\n")
+    #cat("sequences.to.assemble:\n")
+    #cat(sequences.to.assemble, "\n")
     sequence.lead = sequences.to.assemble[1]
-    cat("sequence.lead: ", sequence.lead, "\n")
+    #cat("sequence.lead: ", sequence.lead, "\n")
     max.overlap.length = 0
     max.overlap.index = 0
     max.overlap.sequence.lag = ""
     max.overlap.merge = ""
-    cat(uniprotid, "\n")
+    #cat(uniprotid, "\n")
     for (lag.i in 2:(length(sequences.to.assemble))) {
       sequence.lag = sequences.to.assemble[lag.i]
-      cat("sequence.lag: ", sequence.lag, "\n")
+      #cat("sequence.lag: ", sequence.lag, "\n")
       merge.list = merge_sequences(sequence.lead, sequence.lag)
-      cat("merge.list: ")
-      str(merge.list)
-      cat("\n")
+      #cat("merge.list: ")
+      #str(merge.list)
+      #cat("\n")
       overlap.length = merge.list[["length"]]
       overlap.merge = merge.list[["merge"]]
-      cat("overlap.length: ")
-      str(overlap.length)
-      cat("\n")
-      cat("overlap.merge: ")
-      str(overlap.merge)
-      cat("\n")
+      #cat("overlap.length: ")
+      #str(overlap.length)
+      #cat("\n")
+      #cat("overlap.merge: ")
+      #str(overlap.merge)
+      #cat("\n")
       if (overlap.length > max.overlap.length) {
         max.overlap.length = overlap.length
         max.overlap.index = lag.i
@@ -1466,25 +1545,76 @@ assemble_by_overlaps = function(uniprotid,
 #                                                Uniprot.ID = rep("A2A3V1", 4),
 #                                                stringsAsFactors = F)
 
-unmatched.remainder.crosslinked.test = dplyr::bind_rows(purrr::map(unmatched.peptides.remainder.test %>%
-                                                                pull(Uniprot.ID) %>%
-                                                                unique(),
-                                                              function(uniprotid) {
-                                                                assemble_by_overlaps(uniprotid,
-                                                                                     unmatched.peptides.remainder.test %>%
-                                                                                       filter(Uniprot.ID == uniprotid) %>%
-                                                                                       pull(peptide.sequence))
-                                                              }))
-unmatched.remainder.crosslinked.test
+clf.all.matched.peptides = clf.ipr.matches.base %>%
+  mutate(int.start = as.integer(int.start),
+         int.stop = as.integer(int.stop)) %>%
+  mutate(match.peptide.overlap = (if_else(int.stop < End.position,
+                                          int.stop,
+                                          End.position) - 
+                                  if_else(int.start > Start.position,
+                                          int.start,
+                                          Start.position) >= 
+                                  -match.vicinity - 1)) %>%
+  filter(match.peptide.overlap) %>%
+  dplyr::select(Uniprot.ID, Sequence, N.term.cleavage.window, C.term.cleavage.window) %>%
+  distinct()
 
-#   group_by(Uniprot.ID,
-#            Sequence,
-#            N.term.cleavage.window,
-#            C.term.cleavage.window) %>%
-#   do(mutate(., peptide.sequence = str_merge(
-#                                     str_merge(
-#                                       stringr::str_replace_all(.$N.term.cleavage.window, "_", ""),
-#                                       stringr::str_replace_all(.$Sequence, "_", "")),
-#                                     stringr::str_replace_all(.$C.term.cleavage.window, "_", "")))) %>%
-#   ungroup()
+clf.all.peptides = clf.ipr.matches.base %>%
+  dplyr::select(Uniprot.ID, Sequence, N.term.cleavage.window, C.term.cleavage.window) %>%
+  distinct()
+
+clf.all.unmatched.peptides = clf.all.peptides %>%
+  dplyr::anti_join(clf.all.matched.peptides,
+                   by = c("Uniprot.ID" = "Uniprot.ID",
+                          "Sequence" = "Sequence",
+                          "N.term.cleavage.window" = "N.term.cleavage.window",
+                          "C.term.cleavage.window" = "C.term.cleavage.window"))
+
+clf.all.unmatched.peptides.merged = clf.all.unmatched.peptides %>%
+    group_by(Uniprot.ID,
+             Sequence,
+             N.term.cleavage.window,
+             C.term.cleavage.window) %>%
+    do(mutate(., peptide.sequence = str_merge(
+                                      str_merge(
+                                        stringr::str_replace_all(.$N.term.cleavage.window, "_", ""),
+                                        stringr::str_replace_all(.$Sequence, "_", "")),
+                                      stringr::str_replace_all(.$C.term.cleavage.window, "_", "")))) %>%
+  ungroup()
+
+tic("Assemble peptide sequences")
+clf.all.unmatched.peptides.merged.assembled = dplyr::bind_rows(purrr::map(clf.all.unmatched.peptides.merged %>%
+                                                                            pull(Uniprot.ID) %>%
+                                                                            unique(),
+                                                                          function(uniprotid) {
+                                                                            assemble_by_overlaps(uniprotid,
+                                                                                                 clf.all.unmatched.peptides.merged %>%
+                                                                                                   filter(Uniprot.ID == uniprotid) %>%
+                                                                                                   pull(peptide.sequence))
+                                                                          }))
+toc()
+# ~ 0.7 sec
+
+# Filter out short sequences and form sequence headers for FASTA
+clf.all.unmatched.peptides.merged.assembled.final = clf.all.unmatched.peptides.merged.assembled %>%
+  filter(nchar(contigs) > 8) %>%
+  group_by(Uniprot.ID) %>%
+  mutate(fasta.header = paste(Uniprot.ID, as.character(row_number()), sep = "_")) %>%
+  ungroup()
+
+# Write down the final table
+write.table(clf.all.unmatched.peptides.merged.assembled.final,
+            "output/final_assembled_peptide_sequences_clf.tsv",
+            quote = F,
+            sep = "\t",
+            row.names = F)
+
+# Write down FASTA with the final sequences
+write.fasta(as.list(clf.all.unmatched.peptides.merged.assembled.final %>%
+                      pull(contigs)),
+            as.list(clf.all.unmatched.peptides.merged.assembled.final %>%
+                      pull(fasta.header)),
+            "output/final_assembled_peptide_sequences_clf.fa")
 ```
+
+We searched motifs _de novo_ in the sequences from the FASTA file using MeMe Suite v5.3.3 with default options, but did not find any significant motifs at the level of e-value < 0.05 (see output/meme_reports).
