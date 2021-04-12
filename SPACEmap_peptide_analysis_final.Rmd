@@ -1314,11 +1314,58 @@ data.frame(domain.type = rep(top.matched.domains.ordered, 2),
     theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5))
 ```
 
-Interestingly, the P-loop-related domains are the top matches, equally frequent in DBPs and RBPs. Although P-loops have been known for a long time as NTP-binding motifs frequently present in various NTP hydrolases ([Vetter and Wittinghofer, 1999](https://www.cambridge.org/core/journals/quarterly-reviews-of-biophysics/article/nucleoside-triphosphatebinding-proteins-different-scaffolds-to-achieve-phosphoryl-transfer/DCF7EEE392136BE87CD82FF3AAD866EC)), recently ([Romero et al., 2018](https://www.pnas.org/content/115/51/E11943)) showed that P-loops can also bind DNA and RNA. The second most frequent match, RNA recognition motif (RRM), is more abundant in RBPs, but is also comparably frequent in DBPs. This may be explained by the fact that RRM can also bind single-strand DNA ([Ding et al., 1999](http://genesdev.cshlp.org/content/13/9/1102.long)). The next two general domain types, MCM domain-containing and helix-turn-helix (HTH), are more frequent in DBPs, which corresponds to the known role of MCM proteins as eukaryotic replication initiation factors ([Tey, 1999](https://www.annualreviews.org/doi/10.1146/annurev.biochem.68.1.649)) and the fact that HTH is a typical DNA-binding domain ([Brennan and Matthews, 1989](https://www.sciencedirect.com/science/article/pii/S0021925818941153)). OB-fold is also more common in DBPs, but is comparably frequent in RBPs. Indeed, the OB-fold cluster of InterPro entries contains the RNA-binding S1 domain ([Bycroft et al., 1997](https://www.sciencedirect.com/science/article/pii/S0092867400818449)), the cold shock domain capable of both DNA- and RNA-binding ([Lindquist and Mertens, 2018](https://biosignaling.biomedcentral.com/articles/10.1186/s12964-018-0274-6)), and ribosomal proteins (Supplementary Table ...). Finally, the Armadillo-related, WD40/YVTN-containing and DEAD-box-related general domains are more frequent in RBPs. 
+```{r, include=T}
+# Select top 5 matched domain types from DBPs and RBPs, and merge these domain types in one set.
+# Let us exclude disordered region matches as here we are interested in domains.
+top.matched.domains = unique(c(clf.ipr.matches.overlap.db_rbp.collated.db_freq.proteins %>%
+                                 arrange(desc(protein.id.freq)) %>%
+                                 head(6) %>% # 5 without IDRs
+                                 pull(ipr.description),
+                               clf.ipr.matches.overlap.db_rbp.collated.rbp_freq.proteins %>%
+                                 arrange(desc(protein.id.freq)) %>%
+                                 head(6) %>% # 5 without IDRs
+                                 pull(ipr.description)))
+
+freq.in.dbp_rbp = clf.ipr.matches.overlap.db_rbp.collated.db_freq.peptides %>%
+  filter(ipr.description %in% top.matched.domains) %>%
+  dplyr::rename("peptide.id.n.dbp" = "peptide.id.n",
+                "peptide.id.freq.dbp" = "peptide.id.freq") %>%
+  dplyr::select(-ipr.accession) %>%
+  dplyr::full_join(clf.ipr.matches.overlap.db_rbp.collated.rbp_freq.peptides %>%
+                     filter(ipr.description %in% top.matched.domains) %>%
+                     dplyr::rename("peptide.id.n.rbp" = "peptide.id.n",
+                                   "peptide.id.freq.rbp" = "peptide.id.freq") %>%
+                     dplyr::select(-ipr.accession),
+                   by = c("ipr.description" = "ipr.description")) %>%
+  tidyr::replace_na(list(peptide.id.n.dbp = 0, 
+                         peptide.id.freq.dbp = 0,
+                         peptide.id.n.rbp = 0,
+                         peptide.id.freq.rbp = 0)) %>%
+  arrange(desc(peptide.id.freq.dbp)) %>%
+  filter(ipr.description != "Disordered region")
+
+top.matched.domains.ordered = freq.in.dbp_rbp$ipr.description
+
+# Plot the top 5 matched domain types, sorted by decreasing abundance in DBPs
+data.frame(domain.type = rep(top.matched.domains.ordered, 2),
+           protein.category = c(rep("DBP", length(top.matched.domains.ordered)), 
+                                rep("RBP", length(top.matched.domains.ordered))),
+           peptide.freq = c(freq.in.dbp_rbp$peptide.id.freq.dbp,
+                            freq.in.dbp_rbp$peptide.id.freq.rbp)) %>%
+  mutate(domain.type = factor(domain.type, levels = top.matched.domains.ordered)) %>%
+  mutate(peptide.freq = peptide.freq * 100) %>%
+  ggplot(aes(x = domain.type, y = peptide.freq)) +
+    geom_col(aes(fill = protein.category), position = "dodge2") +
+    scale_y_continuous(limits = c(0, 12), breaks = pretty_breaks(n = 7)) +
+    theme_classic() +
+    theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5))
+```
+
+Interestingly, the P-loop-related domains are the top matches, equally frequent in DBPs and RBPs. Although P-loops have been known for a long time as NTP-binding motifs frequently present in various NTP hydrolases ([Vetter and Wittinghofer, 1999](https://www.cambridge.org/core/journals/quarterly-reviews-of-biophysics/article/nucleoside-triphosphatebinding-proteins-different-scaffolds-to-achieve-phosphoryl-transfer/DCF7EEE392136BE87CD82FF3AAD866EC)), recently ([Romero et al., 2018](https://www.pnas.org/content/115/51/E11943)) showed that P-loops can also bind DNA and RNA. The second most frequent match, RNA recognition motif (RRM), is more abundant in RBPs, but is also comparably frequent in DBPs. This may be explained by the fact that RRM can also bind single-strand DNA ([Ding et al., 1999](http://genesdev.cshlp.org/content/13/9/1102.long)). The next two general domain clusters, MCM domain-containing and helix-turn-helix (HTH), are more frequent in DBPs, which corresponds to the known role of MCM proteins as eukaryotic replication initiation factors ([Tey, 1999](https://www.annualreviews.org/doi/10.1146/annurev.biochem.68.1.649)) and the fact that HTH is a typical DNA-binding domain ([Brennan and Matthews, 1989](https://www.sciencedirect.com/science/article/pii/S0021925818941153)). Another top match, the OB-fold, is also more common in DBPs, but is comparably frequent in RBPs. Indeed, the OB-fold cluster of InterPro entries contains the RNA-binding S1 domain ([Bycroft et al., 1997](https://www.sciencedirect.com/science/article/pii/S0092867400818449)), the cold shock domain capable of both DNA- and RNA-binding ([Lindquist and Mertens, 2018](https://biosignaling.biomedcentral.com/articles/10.1186/s12964-018-0274-6)), and ribosomal proteins that may contact rRNA (Supplementary Table ...). Finally, the Armadillo-related, WD40/YVTN-containing and DEAD-box-related domain clusters are more frequent in RBPs. In the Armadillo-related cluster, both the Pumillo homology domain and the MIF4G domain are known RNA binders ([Wang et al., 2002](https://www.sciencedirect.com/science/article/pii/S0092867402008735); [Marintchev and Wagner, 2005](https://pubs.acs.org/doi/10.1021/bi051271v)). Some other entries in this cluster describe domains from translation factors or nucleolus-localised proteins; hence, these domains could bind RNA or DNA (Supplementary Table ...). Entries from the WD40/YVTN-containing and DEAD-box-related clusters have not been shown to bind RNA, although the DEAD-box-related entries belong to RNA and DNA helicases, and one of the entries (IPR014001) describes a DNA-binding domain. Overall, SPACEmap detects both known and novel DNA- and RNA-binding domains.
 
 ---
 
-The armadillo fold is a very general type of protein structure which, according to InterPro, has “an extensive solvent-accessible surface that is well suited to binding large substrates such as proteins and nucleic acids.” Furthermore, many of the specific entries from this general entry are indeed related to RNA metabolism: (1) the W2 domain (IPR003307) and the MIF4G domains (see, for example, IPR003890) come from translation factors (and MIF4G is also known to function in the nonsense-mediated mRNA decay); (2) “DNA polymerase V/Myb-binding protein 1A” (IPR007015) and “Nucleolar pre-ribosomal-associated protein 1, C-terminal domain” (IPR032436) localise to nucleolus where rRNA is produced; (3) “Pumilio homology domain” (IPR033133) is a known RNA-binding domain. OB-fold structure is also more common in DBPs, but 
+The armadillo fold is a very general type of protein structure which, according to InterPro, has “an extensive solvent-accessible surface that is well suited to binding large substrates such as proteins and nucleic acids.” Furthermore, many of the specific entries from this general entry are indeed related to RNA metabolism: (1) the W2 domain (IPR003307) and the MIF4G domains (see, for example, IPR003890) come from translation factors (and MIF4G is also known to function in the nonsense-mediated mRNA decay); (2) “DNA polymerase V/Myb-binding protein 1A” (IPR007015) and “Nucleolar pre-ribosomal-associated protein 1, C-terminal domain” (IPR032436) localise to nucleolus where rRNA is produced; (3) “Pumilio homology domain” (IPR033133) is a known RNA-binding domain. 
 
 WC40/YVTN-containing: ...
 
