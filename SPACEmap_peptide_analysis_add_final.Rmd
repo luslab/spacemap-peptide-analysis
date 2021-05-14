@@ -1528,4 +1528,172 @@ cat("RF:", (all.ipr.matches.base.dbd.marked %>%
          nrow()), "\n")
 ```
 
+## Stratify all CLF peptides by matches
 
+Count CLF peptides (from DNA- and RNA-binding proteins) that match domains, IDRs, and those who do match any feature:
+
+```{r, include=T}
+clf.peptides.coord = annot.table %>%
+  left_join(peptide.table, by = "Uniprot.ID") %>%
+  dplyr::select(Uniprot.ID, 
+                Sequence, 
+                N.term.cleavage.window, 
+                C.term.cleavage.window,
+                Start.position,
+                End.position,
+                Category,
+                RBP) %>%
+  filter(!is.na(Sequence)) %>%
+  filter(Category == "DB" | RBP == "RBP") %>%
+  distinct()
+
+match.vicinity = 10 # amino acids
+
+clf.peptides.matches = clf.peptides.coord %>%
+  left_join(clf.ipr.matches,
+            by = c("Uniprot.ID" = "uniprot.id")) %>%
+  mutate(int.start = as.integer(int.start),
+         int.stop = as.integer(int.stop)) %>%
+  mutate(match.peptide.overlap = (if_else(int.stop < End.position,
+                                          int.stop,
+                                          End.position) - 
+                                  if_else(int.start > Start.position,
+                                          int.start,
+                                          Start.position) >= 
+                                  -match.vicinity - 1)) %>%
+  mutate(matched.feature = ifelse(!match.peptide.overlap, 
+                                  "None",
+                                  ifelse(ipr.description == "",
+                                         "IDR",
+                                         "Domain"))) %>%
+  group_by(Uniprot.ID, 
+           Sequence, 
+           N.term.cleavage.window, 
+           C.term.cleavage.window) %>%
+  do(mutate(., matched = ifelse("Domain" %in% .$matched.feature,
+                                "Domain",
+                                ifelse("IDR" %in% .$matched.feature,
+                                       "IDR",
+                                       "None")))) %>%
+  
+  ungroup()
+```
+
+So, CLF peptides from DNA- and RNA-binding proteins stratify by their matches as follows:
+
+```{r, include=T}
+peptides.matched.domain.n = clf.peptides.matches %>% 
+  filter(matched == "Domain") %>%
+  dplyr::select(Uniprot.ID, 
+                Sequence, 
+                N.term.cleavage.window, 
+                C.term.cleavage.window) %>%
+  distinct() %>%
+  nrow()
+
+peptides.matched.idr.n = clf.peptides.matches %>% 
+  filter(matched == "IDR") %>%
+  dplyr::select(Uniprot.ID, 
+                Sequence, 
+                N.term.cleavage.window, 
+                C.term.cleavage.window) %>%
+  distinct() %>%
+  nrow()
+
+peptides.matched.none.n = clf.peptides.matches %>% 
+  filter(matched == "None") %>%
+  dplyr::select(Uniprot.ID, 
+                Sequence, 
+                N.term.cleavage.window, 
+                C.term.cleavage.window) %>%
+  distinct() %>%
+  nrow()
+
+peptides.matched.all.n = clf.peptides.matches %>% 
+  dplyr::select(Uniprot.ID, 
+                Sequence, 
+                N.term.cleavage.window, 
+                C.term.cleavage.window) %>%
+  distinct() %>%
+  nrow()
+
+cat("Domain:", peptides.matched.domain.n, paste0("(", round(peptides.matched.domain.n / peptides.matched.all.n * 100, 2), "%)\n"))
+cat("IDR   :", peptides.matched.idr.n,    paste0("(", round(peptides.matched.idr.n    / peptides.matched.all.n * 100, 2), "%)\n"))
+cat("None  :", peptides.matched.none.n,   paste0("(", round(peptides.matched.none.n   / peptides.matched.all.n * 100, 2), "%)\n"))
+```
+
+## Annotate InterPro entries matched by CLF peptides
+
+First, we ran `classify_domains.py` to obtain a table of all InterPro v82 entries classified into "Putative DBD" (if the word "DNA" is present in the entry) and "Other" (if the word "DNA" is not present in the entry). In this way, we obtained the `output/interpro82_domain_binary_classification.tsv` table.
+
+Prepare the draft classification table of InterPro entries matched to CLF peptides from DNA- and RNA-binding proteins:
+
+```{r, include=T}
+ipr.draft.classes = read.delim("output/interpro82_domain_binary_classification.tsv")
+
+ipr.draft.classes.clf = clf.peptides.matches %>%
+  filter(match.peptide.overlap) %>%
+  dplyr::select(ipr.accession,
+                ipr.description) %>%
+  distinct() %>%
+  left_join(ipr.draft.classes,
+            by = c("ipr.accession" = "ipr_accession")) %>%
+  filter(!is.na(category))
+
+write.table(ipr.draft.classes.clf,
+            "output/ipr_draft_classes_clf.tsv",
+            quote = F,
+            sep = "\t",
+            row.names = F)
+```
+
+Check the proportion of putative DBDs among all matched InterPro entries:
+
+```{r, include=T}
+ipr.draft.classes.clf.putative_dbd.n = ipr.draft.classes.clf %>%
+  filter(category == "Putative_DBD") %>%
+  pull(ipr.accession) %>%
+  unique() %>%
+  length()
+
+ipr.draft.classes.clf.all.n = ipr.draft.classes.clf %>%
+  pull(ipr.accession) %>%
+  unique() %>%
+  length()
+
+cat("Number of putative DBDs:", 
+    ipr.draft.classes.clf.putative_dbd.n, 
+    paste0("(", round(ipr.draft.classes.clf.putative_dbd.n / ipr.draft.classes.clf.all.n * 100, 2), "%)\n"))
+```
+
+Check the proportion of peptides matched by putative DBDs among all peptides:
+
+```{r, include=T}
+ipr.draft.classes.clf.putative_dbd.iprs = ipr.draft.classes.clf %>%
+  filter(category == "Putative_DBD") %>%
+  pull(ipr.accession) %>%
+  unique()
+
+clf.peptides.matches.putative_dbd_peptides.n = clf.peptides.matches %>%
+  filter(match.peptide.overlap) %>%
+  filter(ipr.accession %in% ipr.draft.classes.clf.putative_dbd.iprs) %>%
+  dplyr::select(Uniprot.ID, 
+                Sequence, 
+                N.term.cleavage.window, 
+                C.term.cleavage.window) %>%
+  distinct() %>%
+  nrow()
+
+clf.peptides.matches.putative_dbd_peptides.all = clf.peptides.matches %>%
+  filter(match.peptide.overlap) %>%
+  dplyr::select(Uniprot.ID, 
+                Sequence, 
+                N.term.cleavage.window, 
+                C.term.cleavage.window) %>%
+  distinct() %>%
+  nrow()
+
+cat("Number of peptides matched by putative DBDs:", 
+    clf.peptides.matches.putative_dbd_peptides.n, 
+    paste0("(", round(clf.peptides.matches.putative_dbd_peptides.n / clf.peptides.matches.putative_dbd_peptides.all * 100, 2), "%)\n"))
+```
