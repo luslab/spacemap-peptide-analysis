@@ -5,8 +5,6 @@
 #SBATCH --mem 8G
 #SBATCH --time 02:00:00
 
-# To reproduce the run of InterProScan, you would need to change the paths below
-
 # This FASTA was queried from UniProt using UniProt IDs of proteins 
 # whose peptides were captured by both SPACE and 
 # the released fraction of SPACEmap
@@ -14,7 +12,7 @@
 fasta="input/Released_fraction.txt_overlapped_with_SPACE.fa"
 
 interproscan-5.47-82.0/interproscan.sh \
-    --output-dir interproscan_matches \
+    --output-dir interproscan_matches_rf \
     --input ${fasta} \
     --iprlookup \
-    --tempdir ../tmp
+    --tempdir tmp
