@@ -63,7 +63,7 @@ for ipr in root:
            (not re.search('DNA', goDescriptions)):
             iprClassification[iprAccession] = 'Other'
         else:
-            iprClassification[iprAccession] = 'Putative_DBD'
+            iprClassification[iprAccession] = 'DNA-related'
 print('Done', file = sys.stderr)
 
 
