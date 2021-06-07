@@ -1789,11 +1789,11 @@ data.frame(category = c("DNA-related", "Other"),
 
 ## Check CLF peptides in known DBDs
 
-Select CLF proteins (DBPs and RBPs only) with known DBDs:
+Select DBPs with known DBDs:
 
 ```{r, include=T}
 clf.ipr.matches.base.dbd_matches = clf.ipr.matches.base %>%
-  filter(Category == "DB" | RBP == "RBP") %>%
+  filter(Category == "DB") %>%
   filter(ipr.accession %in% dbd.table$ipr_accession) %>%
   mutate(int.start = as.integer(int.start),
          int.stop = as.integer(int.stop)) %>%
@@ -1838,11 +1838,11 @@ data.frame(category = c("Matched DBD", "Unmatched DBD"),
     theme_classic()
 ```
 
-Check any matches present in DBPs and RBPs where known DBDs are not matched by CLF peptides:
+Check DBPs where known DBDs are not matched by CLF peptides:
 
 ```{r, include=T}
 unmatched.proteins.other_matches = clf.ipr.matches.base %>%
-  filter(Category == "DB" | RBP == "RBP") %>%
+  filter(Category == "DB") %>%
   filter(Uniprot.ID %in% unmatched.proteins) %>%
   mutate(int.start = as.integer(int.start),
          int.stop = as.integer(int.stop)) %>%
@@ -1871,7 +1871,7 @@ unmatched.proteins.other_matches %>%
 Check how many proteins are matched by each of the non-DBD entries:
 
 ```{r, include=T}
-unmatched.proteins.other_matches %>%
+other.matches = unmatched.proteins.other_matches %>%
   filter(site.matched) %>%
   filter(match.peptide.overlap) %>%
   dplyr::select(Uniprot.ID, ipr.accession, ipr.description) %>%
@@ -1881,18 +1881,109 @@ unmatched.proteins.other_matches %>%
   ungroup() %>%
   dplyr::select(-Uniprot.ID) %>%
   distinct() %>%
-  arrange(desc(n))
+  arrange(desc(n)) 
+
+other.matches
 ```
 
-Check if matched domains not regarded as known DBDs are still potential DBDs:
+Most probably, these domains do not bind DNA.
+
+Plot the final frequencies of DBPs with DBDs, that 
+
+1) Have CLF peptides from DBDs.
+
+2) Do not have CLF peptides from DBDs, but have CLF peptides from IDRs.
+
+3) Do not have CLF peptides from IDRs, but have CLF peptides from non-DBD domains.
+
+4) Do not have CLF peptides from non-DBD domains, but have CLF peptides from non-domain or non-ID regions.
 
 ```{r, include=T}
-unmatched.proteins.other_matches %>%
+idr.matched.proteins = unmatched.proteins.other_matches %>%
   filter(site.matched) %>%
   filter(match.peptide.overlap) %>%
-  dplyr::select(ipr.accession, ipr.description) %>%
-  distinct()
+  dplyr::select(Uniprot.ID, ipr.accession, ipr.description) %>%
+  distinct() %>%
+  filter(ipr.accession == "") %>%
+  pull(Uniprot.ID) %>%
+  unique() 
+
+idr.matched.proteins.n = length(idr.matched.proteins)
+
+other.domain.matches = unmatched.proteins.other_matches %>%
+  filter(site.matched) %>%
+  filter(match.peptide.overlap) %>%
+  dplyr::select(Uniprot.ID, ipr.accession, ipr.description) %>%
+  distinct() %>%
+  filter(ipr.accession != "") %>%
+  filter(!Uniprot.ID %in% idr.matched.proteins) %>%
+  pull(Uniprot.ID) %>%
+  unique() 
+
+other.domain.matched.n = length(other.domain.matches)
+
+nonregion.matched.proteins = unmatched.proteins.other_matches %>%
+  filter(!site.matched) %>%
+  pull(Uniprot.ID) %>%
+  unique() 
+
+nonregion.matched.proteins.n = length(nonregion.matched.proteins)
+
+data.frame(category = c("Matched DBD", "Matched IDR", "Matched other domain", "No matched regions"),
+           feature = c("DBPs with known DBDs"),
+           fraction = c(matched.proteins.n / all.proteins.n,
+                        idr.matched.proteins.n / all.proteins.n,
+                        other.domain.matched.n / all.proteins.n,
+                        nonregion.matched.proteins.n / all.proteins.n)) %>%
+  mutate(category = factor(category, levels = c("Matched DBD", 
+                                                "Matched IDR", 
+                                                "Matched other domain", 
+                                                "No matched regions"))) %>%
+  ggplot(aes(x = feature, y = fraction)) +
+    geom_col(aes(fill = category)) +
+    theme_classic()
 ```
 
+Check the total number of DBPs and the number of DBPs with known (classical) DBDs:
 
+```{r, include=T}
+cat("Total number of DBPs:", 
+    clf.ipr.matches.base %>% 
+      filter(Category == "DB") %>%
+      pull(Uniprot.ID) %>%
+      unique() %>%
+      length(), 
+    "\n")
+
+cat("Number of DBPs with classical DBDs:", 
+    clf.ipr.matches.base %>% 
+      filter(Category == "DB") %>%
+      filter(ipr.accession %in% dbd.table$ipr_accession) %>%
+      pull(Uniprot.ID) %>%
+      unique() %>%
+      length(), 
+    "\n")
+```
+
+Hence, only ~32% (109/337) of DBPs have classical DBDs.
+
+Check matches in DBPs that do not have classical DBDs:
+
+```{r, include=T}
+proteins.with.dbds = clf.ipr.matches.base.dbd_matches %>% 
+  pull(Uniprot.ID) %>% 
+  unique()
+
+clf.ipr.matches.base %>% 
+  filter(Category == "DB") %>%
+  filter(!Uniprot.ID %in% proteins.with.dbds) %>%
+  dplyr::count(Uniprot.ID, ipr.accession, ipr.description) %>%
+  distinct() %>%
+  group_by(ipr.accession, ipr.description) %>%
+  do(mutate(., protein.n = nrow(.))) %>%
+  ungroup() %>%
+  dplyr::select(ipr.accession, ipr.description, protein.n) %>%
+  distinct() %>%
+  arrange(desc(protein.n))
+```
 

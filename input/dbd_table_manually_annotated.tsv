@@ -26,6 +26,7 @@ IPR002100	Transcription factor, MADS-box	Domain	DBD	Evidence from InterPro descr
 IPR002515	Zinc finger, C2H2C-type	Repeat	DBD	Evidence from InterPro description	is	Evidence from InterPro description	C2H2 ZF
 IPR002857	Zinc finger, CXXC-type	Domain	DBD	Evidence from InterPro description	is	Evidence from InterPro description	CxxC ZF
 IPR003150	DNA-binding RFX-type winged-helix domain	Domain	DBD	Evidence from InterPro description	is	Evidence from InterPro description	RFX
+IPR003166	Transcription factor TFIIE beta subunit, DNA-binding domain	Domain	DBD	Evidence from InterPro description	is	Evidence from InterPro description	None
 IPR003316	E2F/DP family, winged-helix DNA-binding domain	Domain	DBD	Evidence from InterPro description	is	Evidence from InterPro description	E2F
 IPR003350	CUT domain	Domain	DBD	Evidence from InterPro description	is	Evidence from InterPro description	CUT
 IPR003604	Matrin/U1-C-like, C2H2-type zinc finger	Domain	DBD	C2H2 ZF can be a DBD	is	Evidence from InterPro description	C2H2 ZF
@@ -78,10 +79,13 @@ IPR033897	MADS SRF-like	Domain	DBD	Evidence from InterPro description	is	"Eviden
 IPR034736	Zinc finger C2H2 AKAP95-type	Domain	DBD	Evidence from InterPro description	is	Evidence from InterPro description	C2H2 ZF
 IPR036060	Zinc finger, C2H2C-type superfamily	Homologous_superfamily	DBD	Evidence from InterPro description	is	Evidence from InterPro description	C2H2 ZF
 IPR036236	Zinc finger C2H2 superfamily	Homologous_superfamily	DBD	Evidence from InterPro description	is	Evidence from InterPro description	C2H2 ZF
+IPR036388	Winged helix-like DNA-binding domain superfamily	Homologous_superfamily	DBD	Evidence from InterPro description	is	Evidence from InterPro description	Winged HTH
+IPR036390	Winged helix DNA-binding domain superfamily	Homologous_superfamily	DBD	Evidence from InterPro description	is	Evidence from InterPro description	Winged HTH
 IPR036431	ARID DNA-binding domain superfamily	Homologous_superfamily	DBD	Evidence from InterPro description	is	Evidence from InterPro description	ARID/BRIGHT
 IPR036647	GTF2I-like repeat superfamily	Homologous_superfamily	DBD	Evidence from InterPro description	is	Evidence from InterPro description	GTF2I-like
 IPR036910	High mobility group box domain superfamily	Homologous_superfamily	DBD	Evidence from InterPro description	is	Evidence from InterPro description	HMG/Sox
 IPR037220	Zinc finger BED domain	Homologous_superfamily	DBD	Family in HumanTFs (BED ZF)	is	Evidence from InterPro description	BED ZF
+IPR040450	TFIIF beta subunit, HTH domain	Domain	DBD	Evidence from InterPro description; HTH is usually a typical DBD	is	Evidence from InterPro description; HTH is usually a typical DBD, and this entry overlaps with DNA-binding winged HTH entries	HTH
 IPR040647	SPIN-DOC, C2H2-type zinc-finger	Domain	DBD	Family in HumanTFs (C2H2 ZF)	is	Evidence from InterPro description	C2H2 ZF
 IPR041011	ZBTB21, zinc finger domain	Domain	DBD	Family in HumanTFs (C2H2 ZF)	is	Evidence from InterPro description	C2H2 ZF
 IPR041042	Hakai, C2H2 zinc finger domain	Domain	DBD	Family in HumanTFs (C2H2 ZF)	is	Evidence from InterPro description	C2H2 ZF
