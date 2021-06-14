@@ -1862,7 +1862,8 @@ unmatched.proteins.other_matches %>%
 
 unmatched.proteins.other_matches %>%
   filter(site.matched) %>%
-  filter(match.peptide.overlap)
+  filter(match.peptide.overlap) %>%
+  filter(ipr.accession == "IPR017923")
 
 unmatched.proteins.other_matches %>%
   filter(!site.matched)
@@ -1886,7 +1887,19 @@ other.matches = unmatched.proteins.other_matches %>%
 other.matches
 ```
 
-Most probably, these domains do not bind DNA.
+Most probably, these domains do not bind DNA. However, these non-DBD entries can still be relevant to chromatin, and proteins from which they come may have been bound to other chromatin proteins via these non-DBDs or IDRs, or use their IDRs to bind to DNA. 
+
+Write down the table of non-DBD matches to manually classify them into those expected and unexpected for chromatin proteins:
+
+```{r, include=T}
+write.table(other.matches,
+            "output/space_spacemap-clf_shared_peptides_dbps_nondbds.tsv",
+            quote = F,
+            sep = "\t",
+            row.names = F)
+```
+
+We manually classified these non-DBDs into those expected and unexpected for chromatin proteins. We will use this classification below, in the overall plot of different fractions of proteins.
 
 Plot the final frequencies of DBPs with DBDs, that 
 
@@ -1935,10 +1948,10 @@ data.frame(category = c("Matched DBD", "Matched IDR", "Matched other domain", "N
                         idr.matched.proteins.n / all.proteins.n,
                         other.domain.matched.n / all.proteins.n,
                         nonregion.matched.proteins.n / all.proteins.n)) %>%
-  mutate(category = factor(category, levels = c("Matched DBD", 
-                                                "Matched IDR", 
-                                                "Matched other domain", 
-                                                "No matched regions"))) %>%
+  mutate(category = factor(category, levels = rev(c("Matched DBD", 
+                                                    "Matched IDR", 
+                                                    "Matched other domain", 
+                                                    "No matched regions")))) %>%
   ggplot(aes(x = feature, y = fraction)) +
     geom_col(aes(fill = category)) +
     theme_classic()
