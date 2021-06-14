@@ -1862,8 +1862,7 @@ unmatched.proteins.other_matches %>%
 
 unmatched.proteins.other_matches %>%
   filter(site.matched) %>%
-  filter(match.peptide.overlap) %>%
-  filter(ipr.accession == "IPR017923")
+  filter(match.peptide.overlap)
 
 unmatched.proteins.other_matches %>%
   filter(!site.matched)
@@ -1899,7 +1898,7 @@ write.table(other.matches,
             row.names = F)
 ```
 
-We manually classified these non-DBDs into those expected and unexpected for chromatin proteins. We will use this classification below, in the overall plot of different fractions of proteins.
+We manually classified these non-DBDs into those expected and unexpected to be matched by the crosslinked peptides from a SPACEmap experiment (see the classification in `space_spacemap-clf_shared_peptides_dbps_nondbds_final.tsv`). We will use this classification below, in the overall plot of different fractions of proteins.
 
 Plot the final frequencies of DBPs with DBDs, that 
 
@@ -1907,11 +1906,13 @@ Plot the final frequencies of DBPs with DBDs, that
 
 2) Do not have CLF peptides from DBDs, but have CLF peptides from IDRs.
 
-3) Do not have CLF peptides from IDRs, but have CLF peptides from non-DBD domains.
+3) Do not have CLF peptides from IDRs, but have CLF peptides from non-DBD domains (expected, unclear, or not expected).
 
 4) Do not have CLF peptides from non-DBD domains, but have CLF peptides from non-domain or non-ID regions.
 
 ```{r, include=T}
+other.matches.classified = read.delim("output/space_spacemap-clf_shared_peptides_dbps_nondbds_final.txt")
+
 idr.matched.proteins = unmatched.proteins.other_matches %>%
   filter(site.matched) %>%
   filter(match.peptide.overlap) %>%
@@ -1923,17 +1924,68 @@ idr.matched.proteins = unmatched.proteins.other_matches %>%
 
 idr.matched.proteins.n = length(idr.matched.proteins)
 
-other.domain.matches = unmatched.proteins.other_matches %>%
+# other.domain.matches = unmatched.proteins.other_matches %>%
+#   filter(site.matched) %>%
+#   filter(match.peptide.overlap) %>%
+#   dplyr::select(Uniprot.ID, ipr.accession, ipr.description) %>%
+#   distinct() %>%
+#   filter(ipr.accession != "") %>%
+#   filter(!Uniprot.ID %in% idr.matched.proteins) %>%
+#   pull(Uniprot.ID) %>%
+#   unique() 
+# 
+# other.domain.matched.n = length(other.domain.matches)
+
+other.domain.matched.expected = unmatched.proteins.other_matches %>%
   filter(site.matched) %>%
   filter(match.peptide.overlap) %>%
   dplyr::select(Uniprot.ID, ipr.accession, ipr.description) %>%
   distinct() %>%
   filter(ipr.accession != "") %>%
   filter(!Uniprot.ID %in% idr.matched.proteins) %>%
+  dplyr::left_join(other.matches.classified,
+                   by = c("ipr.accession" = "ipr.accession",
+                          "ipr.description" = "ipr.description")) %>%
+  filter(expected == "Yes") %>%
   pull(Uniprot.ID) %>%
   unique() 
 
-other.domain.matched.n = length(other.domain.matches)
+other.domain.matched.expected.n = length(other.domain.matched.expected)
+
+other.domain.matched.unclear = unmatched.proteins.other_matches %>%
+  filter(site.matched) %>%
+  filter(match.peptide.overlap) %>%
+  dplyr::select(Uniprot.ID, ipr.accession, ipr.description) %>%
+  distinct() %>%
+  filter(ipr.accession != "") %>%
+  filter(!Uniprot.ID %in% c(idr.matched.proteins,
+                            other.domain.matched.expected)) %>%
+  dplyr::left_join(other.matches.classified,
+                   by = c("ipr.accession" = "ipr.accession",
+                          "ipr.description" = "ipr.description")) %>%
+  filter(expected == "Unclear") %>%
+  pull(Uniprot.ID) %>%
+  unique() 
+
+other.domain.matched.unclear.n = length(other.domain.matched.unclear)
+
+other.domain.matched.unexpected = unmatched.proteins.other_matches %>%
+  filter(site.matched) %>%
+  filter(match.peptide.overlap) %>%
+  dplyr::select(Uniprot.ID, ipr.accession, ipr.description) %>%
+  distinct() %>%
+  filter(ipr.accession != "") %>%
+  filter(!Uniprot.ID %in% c(idr.matched.proteins,
+                            other.domain.matched.expected,
+                            other.domain.matched.unclear)) %>%
+  dplyr::left_join(other.matches.classified,
+                   by = c("ipr.accession" = "ipr.accession",
+                          "ipr.description" = "ipr.description")) %>%
+  filter(expected == "No") %>%
+  pull(Uniprot.ID) %>%
+  unique() 
+
+other.domain.matched.unexpected.n = length(other.domain.matched.unexpected)
 
 nonregion.matched.proteins = unmatched.proteins.other_matches %>%
   filter(!site.matched) %>%
@@ -1942,20 +1994,31 @@ nonregion.matched.proteins = unmatched.proteins.other_matches %>%
 
 nonregion.matched.proteins.n = length(nonregion.matched.proteins)
 
-data.frame(category = c("Matched DBD", "Matched IDR", "Matched other domain", "No matched regions"),
+data.frame(category = c("Matched DBD", 
+                        "Matched IDR", 
+                        "Matched other domain - expected",
+                        "Matched other domain - unclear",
+                        "Matched other domain - unexpected",
+                        "No matched regions"),
            feature = c("DBPs with known DBDs"),
            fraction = c(matched.proteins.n / all.proteins.n,
                         idr.matched.proteins.n / all.proteins.n,
-                        other.domain.matched.n / all.proteins.n,
+                        other.domain.matched.expected.n / all.proteins.n,
+                        other.domain.matched.unclear.n / all.proteins.n,
+                        other.domain.matched.unexpected.n / all.proteins.n,
                         nonregion.matched.proteins.n / all.proteins.n)) %>%
   mutate(category = factor(category, levels = rev(c("Matched DBD", 
                                                     "Matched IDR", 
-                                                    "Matched other domain", 
+                                                    "Matched other domain - expected", 
+                                                    "Matched other domain - unclear", 
+                                                    "Matched other domain - unexpected", 
                                                     "No matched regions")))) %>%
   ggplot(aes(x = feature, y = fraction)) +
     geom_col(aes(fill = category)) +
     theme_classic()
 ```
+
+Hence, ~94% of matches are either a DBD, or an IDR (both of which can be used to bind DNA), or another (but expected) domain (either a putative DBD or a protein-protein-interaction domain). A protein-protein-interaction domain could allow the proteins to bind to DNA indirectrly, by contacting other chromatin proteins.
 
 Check the total number of DBPs and the number of DBPs with known (classical) DBDs:
 
