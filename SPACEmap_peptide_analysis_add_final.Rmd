@@ -154,6 +154,160 @@ clf.ipr.matches = read.delim("input/Crosslinked_fraction_CLF_proteins.fa.tsv",
 
 We have `r clf.ipr.matches %>% filter(ipr.accession != "") %>% distinct() %>% nrow()` domain matches and `r clf.ipr.matches %>% filter(ipr.accession == "") %>% nrow()` predicted disordered regions in `r clf.ipr.matches %>% pull(uniprot.id) %>% unique() %>% length()` proteins.
 
+```{r}
+clf.ipr.matches %>%
+  filter(uniprot.id == "A2A4P0")
+```
+
+Plot an example of scanning results for a particular protein:
+
+```{r, include=T}
+generate_protein_df = function(UniProtId) {
+  return(read.delim("input/Crosslinked_fraction_CLF_proteins.fa.tsv",
+                    header = F,
+                    colClasses = c("character",
+                                   "character",
+                                   "numeric",
+                                   "character",
+                                   "character",
+                                   "character",
+                                   "numeric",
+                                   "numeric",
+                                   "character",
+                                   "character",
+                                   "character",
+                                   "character",
+                                   "character"),
+                    col.names = c("seq.id",
+                                  "md5",
+                                  "seq.length",
+                                  "db",
+                                  "signature.accession",
+                                  "signature.description",
+                                  "start",
+                                  "stop",
+                                  "score",
+                                  "status",
+                                  "date",
+                                  "ipr.accession",
+                                  "ipr.description")) %>%
+         filter(status == "T") %>%
+         # Select domains that are integrated into InterPro (ipr.accession != "") and 
+         # disordered regions (db == "MobiDBLite"; they have empty ipr.accession)
+         filter((ipr.accession != "") | (db == "MobiDBLite")) %>%
+         # Parse the protein sequence headers and take the Uniprot IDs
+         group_by(seq.id) %>%
+         mutate(uniprot.id = unlist(stringr::str_split(seq.id, fixed("|")))[2]) %>%
+         ungroup() %>%
+         filter(uniprot.id == UniProtId))
+}
+
+calc_cumulative_row_number = function(current.ipr.n, protein.df) {
+  return(protein.df %>%
+           filter(ipr.n <= current.ipr.n) %>%
+           dplyr::select(ipr.n,
+                         ipr.row.number) %>%
+           distinct() %>%
+           pull(ipr.row.number) %>%
+           sum())
+}
+
+preprocess_protein_df = function(protein.df) {
+  c = 5 # vertical space between InterPro entries
+  h = 5 # height of a match rectangle
+  d = 2 # vertical space between rectangles
+  
+  protein.df = protein.df %>%
+    dplyr::select(seq.length,
+                  signature.accession,
+                  uniprot.id,
+                  start,
+                  stop,
+                  ipr.accession) %>%
+    dplyr::rename(length = seq.length,
+                           db.accession = signature.accession) %>%
+    arrange(desc(start), desc(stop))
+  
+  ipr.numbers = unique(protein.df$ipr.accession)
+  ipr.numbers = ipr.numbers[ipr.numbers != ""]
+  ipr.numbers = c(ipr.numbers, "")
+  names(ipr.numbers) = as.character(1:(length(ipr.numbers)))
+  
+  protein.df = protein.df %>%
+    rowwise() %>%
+    mutate(ipr.n = as.numeric(names(ipr.numbers[ipr.numbers == ipr.accession]))) %>%
+    arrange(ipr.n) %>%
+    rownames_to_column(var = "row.n") %>%
+    mutate(row.n = as.numeric(row.n)) %>%
+    mutate(ymin = ipr.n * c + (row.n - 1) * (h + d)) %>%
+    mutate(ymax = ymin + h)
+  
+  return(protein.df)
+}
+
+generate_ipr_df = function(protein.df) {
+  ipr.label.shift.x = -10
+  ipr.label.shift.y = 5
+  return(protein.df %>%
+         dplyr::select(ipr.accession,
+                       start,
+                       stop,
+                       ymax) %>%
+         group_by(ipr.accession) %>%
+         do(mutate(., ipr.x = (min(.$start) + max(.$stop)) / 2 + ipr.label.shift.x)) %>%
+         do(mutate(., ipr.y = max(.$ymax) + ipr.label.shift.y)) %>%
+         ungroup() %>%
+         dplyr::select(ipr.accession,
+                       ipr.x,
+                       ipr.y) %>%
+         distinct())
+}
+
+draw_matches = function(uniprot.id) {
+  signature.label.shift.x = 30
+  label.font.size = 4
+  x.axis.extension = 50
+  
+  protein.df = generate_protein_df(uniprot.id)
+  
+  protein.df = preprocess_protein_df(protein.df)
+  
+  ipr.df = generate_ipr_df(protein.df)
+  
+  ggplot(protein.df) +
+    # Matches
+    geom_rect(mapping = aes(xmin = start,
+                            xmax = stop,
+                            ymin = ymin,
+                            ymax = ymax,
+                            fill = db.accession)) +
+    # Signature IDs
+    geom_text(aes(x = stop + signature.label.shift.x,
+                  y = (ymin + ymax) / 2,
+                  label = db.accession),
+              size = label.font.size) +
+    # InterPro IDs
+    geom_text(data = ipr.df,
+              aes(x = ipr.x,
+                  y = ipr.y,
+                  label = ipr.accession),
+              size = label.font.size) +
+    # Ruler
+    xlim(1, unlist(protein.df[1, "length"]) + x.axis.extension) +
+    theme_classic() 
+}
+```
+
+```{r}
+# protein.df = generate_protein_df("A2A4P0")
+# preprocess_protein_df(protein.df)
+draw_matches("A2A4P0")
+```
+
+```{r}
+ipr.numbers
+```
+
 ## Find overlaps of matches with peptides
 
 Join the InterPro match table with the peptide and protein annotation tables (take the intersection with the annotation table, as the annotation table is the reference - peptides from SPACE):
@@ -211,6 +365,14 @@ clf.ipr.matches.overlap = clf.ipr.matches.base %>%
                                           Start.position) >= 
                                   -match.vicinity - 1)) %>%
   filter(match.peptide.overlap)
+```
+
+```{r}
+clf.ipr.matches.overlap %>%
+  filter(Uniprot.ID == "Q6ZQL4")
+
+clf.ipr.matches.overlap %>%
+  filter(Uniprot.ID == "A2A4P0")
 ```
 
 Now we have `r clf.ipr.matches.overlap %>% filter(ipr.accession != "") %>% dplyr::select(Uniprot.ID, ipr.accession, int.start, int.stop) %>% distinct() %>% nrow()` domain matches and `r clf.ipr.matches.overlap %>% filter(ipr.accession == "") %>% dplyr::select(Uniprot.ID, int.start, int.stop) %>% distinct() %>% nrow()` predicted disordered regions overlapping with `r clf.ipr.matches.overlap %>% dplyr::select(Uniprot.ID, Sequence, N.term.cleavage.window, C.term.cleavage.window) %>% distinct() %>% nrow()` peptides (or residing no father than 10 amino acids from them) from `r clf.ipr.matches.overlap %>% pull(Uniprot.ID) %>% unique() %>% length()` proteins.
