@@ -154,12 +154,7 @@ clf.ipr.matches = read.delim("input/Crosslinked_fraction_CLF_proteins.fa.tsv",
 
 We have `r clf.ipr.matches %>% filter(ipr.accession != "") %>% distinct() %>% nrow()` domain matches and `r clf.ipr.matches %>% filter(ipr.accession == "") %>% nrow()` predicted disordered regions in `r clf.ipr.matches %>% pull(uniprot.id) %>% unique() %>% length()` proteins.
 
-```{r}
-clf.ipr.matches %>%
-  filter(uniprot.id == "A2A4P0")
-```
-
-Plot an example of scanning results for a particular protein:
+Define functions to plot InterPro scan results for a protein by UniProt ID:
 
 ```{r, include=T}
 generate_protein_df = function(UniProtId) {
@@ -194,7 +189,6 @@ generate_protein_df = function(UniProtId) {
          filter(status == "T") %>%
          # Select domains that are integrated into InterPro (ipr.accession != "") and 
          # disordered regions (db == "MobiDBLite"; they have empty ipr.accession)
-         filter((ipr.accession != "") | (db == "MobiDBLite")) %>%
          # Parse the protein sequence headers and take the Uniprot IDs
          group_by(seq.id) %>%
          mutate(uniprot.id = unlist(stringr::str_split(seq.id, fixed("|")))[2]) %>%
@@ -202,20 +196,10 @@ generate_protein_df = function(UniProtId) {
          filter(uniprot.id == UniProtId))
 }
 
-calc_cumulative_row_number = function(current.ipr.n, protein.df) {
-  return(protein.df %>%
-           filter(ipr.n <= current.ipr.n) %>%
-           dplyr::select(ipr.n,
-                         ipr.row.number) %>%
-           distinct() %>%
-           pull(ipr.row.number) %>%
-           sum())
-}
-
 preprocess_protein_df = function(protein.df) {
-  c = 5 # vertical space between InterPro entries
-  h = 5 # height of a match rectangle
-  d = 2 # vertical space between rectangles
+  c = 10 # vertical space between InterPro entries
+  h = 5  # height of a match rectangle
+  d = 5  # vertical space between rectangles
   
   protein.df = protein.df %>%
     dplyr::select(seq.length,
@@ -265,7 +249,7 @@ generate_ipr_df = function(protein.df) {
 
 draw_matches = function(uniprot.id) {
   signature.label.shift.x = 30
-  label.font.size = 4
+  label.font.size = 3
   x.axis.extension = 50
   
   protein.df = generate_protein_df(uniprot.id)
@@ -292,20 +276,26 @@ draw_matches = function(uniprot.id) {
                   y = ipr.y,
                   label = ipr.accession),
               size = label.font.size) +
+    # Protein C-terminal mark
+    geom_vline(xintercept = unlist(protein.df[1, "length"])) + 
     # Ruler
-    xlim(1, unlist(protein.df[1, "length"]) + x.axis.extension) +
-    theme_classic() 
+    scale_x_continuous(n.breaks = 7, 
+                       limits = c(0, unlist(protein.df[1, "length"]) + x.axis.extension)) +
+    # Formatting
+    theme_classic() + 
+    theme(axis.line.y = element_blank(),
+          axis.text.y = element_blank(),
+          axis.title.y = element_blank(),
+          axis.ticks.y = element_blank(),
+          axis.title.x = element_blank(),
+          legend.position="none")
 }
 ```
 
-```{r}
-# protein.df = generate_protein_df("A2A4P0")
-# preprocess_protein_df(protein.df)
-draw_matches("A2A4P0")
-```
+Print an example of scanning results from an InterPro:
 
 ```{r}
-ipr.numbers
+draw_matches("A2A4P0")
 ```
 
 ## Find overlaps of matches with peptides
@@ -368,11 +358,102 @@ clf.ipr.matches.overlap = clf.ipr.matches.base %>%
 ```
 
 ```{r}
-clf.ipr.matches.overlap %>%
-  filter(Uniprot.ID == "Q6ZQL4")
+# clf.ipr.matches.overlap %>%
+#   filter(Uniprot.ID == "Q6ZQL4")
 
 clf.ipr.matches.overlap %>%
   filter(Uniprot.ID == "A2A4P0")
+```
+
+Define functions for drawing peptide matches:
+
+```{r, include=T}
+draw_peptides = function(UniProtId) {
+  x.axis.extension = 50
+  y.axis.extension = 100
+  ymin.const = 5
+  ymax.const = 10
+  
+  protein.df = clf.ipr.matches.overlap %>%
+    filter(Uniprot.ID == UniProtId) %>%
+    dplyr::select(Sequence,
+                  N.term.cleavage.window,
+                  C.term.cleavage.window,
+                  Start.position,
+                  End.position) %>%
+    mutate(ymin = ymin.const,
+           ymax = ymax.const)
+  
+  #print(protein.df)
+  
+  protein.length = read.delim("input/Crosslinked_fraction_CLF_proteins.fa.tsv",
+                             header = F,
+                             colClasses = c("character",
+                                            "character",
+                                            "numeric",
+                                            "character",
+                                            "character",
+                                            "character",
+                                            "numeric",
+                                            "numeric",
+                                            "character",
+                                            "character",
+                                            "character",
+                                            "character",
+                                            "character"),
+                             col.names = c("seq.id",
+                                           "md5",
+                                           "seq.length",
+                                           "db",
+                                           "signature.accession",
+                                           "signature.description",
+                                           "start",
+                                           "stop",
+                                           "score",
+                                           "status",
+                                           "date",
+                                           "ipr.accession",
+                                           "ipr.description")) %>%
+    filter(status == "T") %>%
+    # Select domains that are integrated into InterPro (ipr.accession != "") and 
+    # disordered regions (db == "MobiDBLite"; they have empty ipr.accession)
+    filter((ipr.accession != "") | (db == "MobiDBLite")) %>%
+    # Parse the protein sequence headers and take the Uniprot IDs
+    group_by(seq.id) %>%
+    mutate(uniprot.id = unlist(stringr::str_split(seq.id, fixed("|")))[2]) %>%
+    ungroup() %>%
+    filter(uniprot.id == UniProtId) %>%
+    pull(seq.length) %>%
+    unique()
+  
+  ggplot(protein.df) +
+    # Matches
+    geom_rect(mapping = aes(xmin = Start.position,
+                            xmax = End.position,
+                            ymin = ymin,
+                            ymax = ymax)) +
+    # Protein C-terminal mark
+    geom_vline(xintercept = protein.length) + 
+    # Ruler
+    scale_x_continuous(n.breaks = 7, 
+                       limits = c(0, protein.length + x.axis.extension)) +
+    # y scale
+    scale_y_continuous(limits = c(0, ymax.const + y.axis.extension)) + 
+    # Formatting
+    theme_classic() + 
+    theme(axis.line.y = element_blank(),
+          axis.text.y = element_blank(),
+          axis.title.y = element_blank(),
+          axis.ticks.y = element_blank(),
+          axis.title.x = element_blank(),
+          legend.position="none")
+}
+```
+
+Draw matches for the example protein (A2A4P0):
+
+```{r, include=T}
+draw_peptides("A2A4P0")
 ```
 
 Now we have `r clf.ipr.matches.overlap %>% filter(ipr.accession != "") %>% dplyr::select(Uniprot.ID, ipr.accession, int.start, int.stop) %>% distinct() %>% nrow()` domain matches and `r clf.ipr.matches.overlap %>% filter(ipr.accession == "") %>% dplyr::select(Uniprot.ID, int.start, int.stop) %>% distinct() %>% nrow()` predicted disordered regions overlapping with `r clf.ipr.matches.overlap %>% dplyr::select(Uniprot.ID, Sequence, N.term.cleavage.window, C.term.cleavage.window) %>% distinct() %>% nrow()` peptides (or residing no father than 10 amino acids from them) from `r clf.ipr.matches.overlap %>% pull(Uniprot.ID) %>% unique() %>% length()` proteins.
