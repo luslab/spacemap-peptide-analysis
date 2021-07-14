@@ -7,3 +7,7 @@ SPACEmap_peptide_analysis_final_original.Rmd
 output.prev.add/
 tmp
 input/interpro82.xml
+input/prev/interpro82.xml
+input/.~lock*
+prev.output
+prev.output.1

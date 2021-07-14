@@ -41,9 +41,90 @@ library(tictoc)
 library(seqinr)
 ```
 
+## Filter released peptides according to the new table of SPACE proteins
+
+```{r, include=T}
+# space.new = read.delim("input/SPACE.txt")
+# 
+# # Filter the released peptide table
+# released.old = read.delim("input/prev/Released_fraction.txt_overlapped_with_SPACE.tsv")
+# 
+# released.new = released.old %>%
+#   filter(Uniprot.ID %in% space.new$Uniprot.ID)
+# 
+# write.table(released.new,
+#             "input/Released_fraction.txt_overlapped_with_SPACE.tsv",
+#             quote = F,
+#             sep = "\t",
+#             row.names = F)
+# 
+# # Filter scan results for released proteins
+# released.scan.table.old = read.delim("input/prev/Released_fraction.txt_overlapped_with_SPACE.fa.tsv",
+#                                      header = F)
+# 
+# released.scan.table.new = released.scan.table.old %>%
+#   dplyr::rename("seq.id" = "V1") %>%
+#   group_by(seq.id) %>%
+#   mutate(uniprot.id = unlist(stringr::str_split(seq.id, fixed("|")))[2]) %>%
+#   ungroup() %>%
+#   filter(uniprot.id %in% space.new$Uniprot.ID)
+# 
+# write.table(released.scan.table.new,
+#             "input/Released_fraction.txt_overlapped_with_SPACE.fa.tsv",
+#             quote = F,
+#             sep = "\t",
+#             row.names = F,
+#             col.names = F)
+# 
+# # Filter FASTA with released protein sequences
+# released.fasta.old = read.delim("input/prev/Released_fraction.txt_overlapped_with_SPACE.fa",
+#                                 header = F)
+# uniprot.id.current = ""
+# sequence.current = ""
+# released.fasta.table = data.frame(fasta.header = character(),
+#                                   fasta.sequence = character())
+# for (i in 1:(nrow(released.fasta.old))) {
+#   fasta.row = released.fasta.old[i, 1]
+#   if (stringr::str_starts(fasta.row, ">")) {
+#     uniprot.id.next = fasta.row
+#     if (uniprot.id.current != "") {
+#       released.fasta.table = released.fasta.table %>% 
+#         bind_rows(data.frame(fasta.header = uniprot.id.current,
+#                              fasta.sequence = sequence.current))
+#       sequence.current = ""
+#     }
+#     uniprot.id.current = uniprot.id.next
+#   } else {
+#     sequence.current = paste0(sequence.current, fasta.row)
+#   }
+# }
+# released.fasta.table = released.fasta.table %>%
+#   bind_rows(data.frame(fasta.header = uniprot.id.current,
+#                        fasta.sequence = sequence.current))
+# 
+# released.fasta.table.new = released.fasta.table %>%
+#   group_by(fasta.header) %>%
+#   filter(unlist(stringr::str_split(fasta.header, fixed("|")))[2] %in% space.new$Uniprot.ID) %>%
+#   ungroup()
+# 
+# released.fasta.table.fa = data.frame(x = character())
+# for (i in 1:(nrow(released.fasta.table.new))) {
+#   released.fasta.table.fa = released.fasta.table.fa %>%
+#     bind_rows(data.frame(x = c(as.character(released.fasta.table.new[i, 1]),
+#                                as.character(released.fasta.table.new[i, 2]))))
+# }
+# 
+# write.table(released.fasta.table.fa,
+#             "input/Released_fraction.txt_overlapped_with_SPACE.fa",
+#             quote = F,
+#             sep = "\t",
+#             row.names = F,
+#             col.names = F)
+```
+
 ## Obtain the table of InterPro matches in peptides from crosslinked fraction
 
-Unsing InterProScan, we scanned all proteins containing at least one peptide from the crosslinked fraction (see `scan_clf.sh`).
+Using InterProScan, we scanned all proteins containing at least one peptide from the crosslinked fraction (see `scan_clf.sh`).
 
 Upload and filter the scan results; calculate integrated coordinates of the matches:
 
@@ -300,7 +381,7 @@ draw_matches("A2A4P0")
 
 ## Find overlaps of matches with peptides
 
-Join the InterPro match table with the peptide and protein annotation tables (take the intersection with the annotation table, as the annotation table is the reference - peptides from SPACE):
+Join the InterPro match table with the peptide and protein annotation tables (take the intersection with the annotation table, as the annotation table is the reference, i. e. peptides from SPACE):
 
 ```{r, include=T}
 # Read in the table of proteins and peptides from SPACEmap CLF
@@ -318,14 +399,36 @@ peptide.table = read.delim("input/Crosslinked_fraction_CLF.tsv",
                 Gene.names,
                 Protein.names)
 
+# Read the table of chromatin-binding proteins (CBPs) identified by SPACE
+annot.table.cbp = read.delim("input/SPACE_chromatin-binders.txt", 
+                             header = T,
+                             sep = "\t",
+                             stringsAsFactors = F)
+
+# Read the table of RNA-binding proteins (RBPs) identified by SPACE
+annot.table.rbp = read.delim("input/SPACE_RBP_All.txt", 
+                             header = T,
+                             sep = "\t",
+                             stringsAsFactors = F)
+
 # Read the table of proteins and peptides identified by SPACE
-annot.table = read.delim("input/mES_enriched_SPACE.tsv",
+annot.table = read.delim("input/SPACE.txt", 
                          header = T,
                          sep = "\t",
                          stringsAsFactors = F) %>%
-  dplyr::select(Uniprot.ID,
-                Category,
-                RBP)
+  dplyr::select(Uniprot.ID) %>% 
+  left_join(annot.table.cbp %>%
+              dplyr::select(Uniprot.ID,
+                            Gene.names),
+            by = c("Uniprot.ID" = "Uniprot.ID")) %>%
+  dplyr::rename("is.cbp" = "Gene.names") %>%
+  mutate(is.cbp = !is.na(is.cbp)) %>%
+  left_join(annot.table.rbp %>%
+              dplyr::select(Uniprot.ID,
+                            Gene.names),
+            by = c("Uniprot.ID" = "Uniprot.ID")) %>%
+  dplyr::rename("is.rbp" = "Gene.names") %>%
+  mutate(is.rbp = !is.na(is.rbp))
 
 clf.ipr.matches.base = annot.table %>%
   left_join(clf.ipr.matches,
@@ -337,7 +440,11 @@ clf.ipr.matches.base = annot.table %>%
 
 Now we have `r clf.ipr.matches.base %>% filter(ipr.accession != "") %>% dplyr::select(Uniprot.ID, ipr.accession, int.start, int.stop) %>% distinct() %>% nrow()` domain matches and `r clf.ipr.matches.base %>% filter(ipr.accession == "") %>% dplyr::select(Uniprot.ID, int.start, int.stop) %>% distinct() %>% nrow()` predicted disordered region matches in `r clf.ipr.matches.base %>% pull(Uniprot.ID) %>% unique() %>% length()` proteins. The total number of peptides is `r clf.ipr.matches.base %>% dplyr::select(Uniprot.ID, Sequence, N.term.cleavage.window, C.term.cleavage.window) %>% distinct() %>% nrow()`.
 
-Originally, in the annotation table from SPACE, there were `r annot.table %>% filter(Category == "DB") %>% pull(Uniprot.ID) %>% unique() %>% length()` DNA-binding and `r annot.table %>% filter(RBP == "RBP") %>% pull(Uniprot.ID) %>% unique() %>% length()` RNA-binding proteins.
+The number of CBPs is `r clf.ipr.matches.base %>% filter(is.cbp) %>% pull(Uniprot.ID) %>% unique() %>% length()`.
+
+The number of RBPs is `r clf.ipr.matches.base %>% filter(is.rbp) %>% pull(Uniprot.ID) %>% unique() %>% length()`.
+
+Some CBPs are RBPs as well.
 
 Next, take only domain and disordered region matches overlapping with the peptides or residing no farther than 10 amino acids from either side of them:
 
@@ -355,14 +462,6 @@ clf.ipr.matches.overlap = clf.ipr.matches.base %>%
                                           Start.position) >= 
                                   -match.vicinity - 1)) %>%
   filter(match.peptide.overlap)
-```
-
-```{r}
-# clf.ipr.matches.overlap %>%
-#   filter(Uniprot.ID == "Q6ZQL4")
-
-clf.ipr.matches.overlap %>%
-  filter(Uniprot.ID == "A2A4P0")
 ```
 
 Define functions for drawing peptide matches:
@@ -383,8 +482,6 @@ draw_peptides = function(UniProtId) {
                   End.position) %>%
     mutate(ymin = ymin.const,
            ymax = ymax.const)
-  
-  #print(protein.df)
   
   protein.length = read.delim("input/Crosslinked_fraction_CLF_proteins.fa.tsv",
                              header = F,
@@ -538,23 +635,22 @@ write.table(sp.sp2.intersection.peptides.matched %>%
             row.names = F)
 ```
 
-## Select only DNA- and RNA-binding proteins
+## Select only chromatin- and RNA-binding proteins
 
-From the whole table, select only DNA- and RNA-binding proteins for further analysis:
+From the whole table, select only CBPs and RBPs for further analysis:
 
 ```{r, include=T}
-clf.ipr.matches.overlap.db_rbp = clf.ipr.matches.overlap %>%
-  filter((Category == "DB") |
-         (RBP == "RBP"))
+clf.ipr.matches.overlap.cbp_rbp = clf.ipr.matches.overlap %>%
+  filter(is.cbp | is.rbp)
 
-write.table(clf.ipr.matches.overlap.db_rbp,
-            "output/clf_matches_in_db_and_rbp.tsv",
+write.table(clf.ipr.matches.overlap.cbp_rbp,
+            "output/clf_matches_in_cbp_and_rbp.tsv",
             quote = F,
             sep = "\t",
             row.names = F)
 ```
 
-We have `r clf.ipr.matches.overlap.db_rbp %>% filter(Category == "DB") %>% pull(Uniprot.ID) %>% unique() %>% length()` DNA-binding proteins and `r clf.ipr.matches.overlap.db_rbp %>% filter(RBP == "RBP") %>% pull(Uniprot.ID) %>% unique() %>% length()` RNA-binding proteins (some of these proteins are DNA- and RNA-binding at the same time). In total, we lost `r (clf.ipr.matches.overlap %>% pull(Uniprot.ID) %>% unique() %>% length()) - (clf.ipr.matches.overlap.db_rbp %>%  pull(Uniprot.ID) %>% unique() %>% length())` as they are neither marked as DNA-binding nor as RNA-binding.
+We have `r clf.ipr.matches.overlap.cbp_rbp %>% filter(is.cbp) %>% pull(Uniprot.ID) %>% unique() %>% length()` CBPs and `r clf.ipr.matches.overlap.cbp_rbp %>% filter(is.rbp) %>% pull(Uniprot.ID) %>% unique() %>% length()` RBPs (some of these proteins are CBPs and RBPs at the same time). In total, we lost `r (clf.ipr.matches.overlap %>% pull(Uniprot.ID) %>% unique() %>% length()) - (clf.ipr.matches.overlap.cbp_rbp %>%  pull(Uniprot.ID) %>% unique() %>% length())` as they are neither marked as CBPs nor as RBPs.
 
 ## Process matches in peptides from released fraction
 
@@ -845,12 +941,12 @@ data.frame(clf = unique.aa.dict.idr.clf.freq * 100,
 Plot the frequencies of the top matched InterPro entries:
 
 ```{r, include=T, fig.height=8}
-uniprotid.db.total.num = clf.ipr.matches.overlap.db_rbp %>% 
+uniprotid.db.total.num = clf.ipr.matches.overlap.cbp_rbp %>% 
   pull(Uniprot.ID) %>%
   unique() %>%
   length()
 
-clf.ipr.matches.overlap.db_rbp.freq = clf.ipr.matches.overlap.db_rbp %>%
+clf.ipr.matches.overlap.cbp_rbp.freq = clf.ipr.matches.overlap.cbp_rbp %>%
   group_by(ipr.accession) %>%
   mutate(uniprotid.n = length(unique(Uniprot.ID))) %>%
   mutate(uniprotid.freq = uniprotid.n / uniprotid.db.total.num) %>%
@@ -862,7 +958,7 @@ clf.ipr.matches.overlap.db_rbp.freq = clf.ipr.matches.overlap.db_rbp %>%
                                   "Disordered region",
                                   ipr.description))
 
-clf.ipr.matches.overlap.db_rbp.freq %>%
+clf.ipr.matches.overlap.cbp_rbp.freq %>%
   filter(uniprotid.freq >= 0.01) %>%
   mutate(ipr.description = factor(ipr.description, levels = ipr.description)) %>%
   ggplot(aes(x = ipr.description, y = uniprotid.freq)) +
@@ -875,7 +971,7 @@ clf.ipr.matches.overlap.db_rbp.freq %>%
 Write down the overall table of InterPro entry frequencies:
 
 ```{r, include=T}
-write.table(clf.ipr.matches.overlap.db_rbp.freq,
+write.table(clf.ipr.matches.overlap.cbp_rbp.freq,
             "output/clf_matches_in_db_and_rbp_freq.tsv",
             quote = F,
             sep = "\t",
@@ -954,12 +1050,12 @@ count_overlaps = function(gene_df) {
 }
 
 # Form a list of overlapping IPR pairs
-uniprot.ids = clf.ipr.matches.overlap.db_rbp %>%
+uniprot.ids = clf.ipr.matches.overlap.cbp_rbp %>%
   pull(Uniprot.ID) %>%
   unique()
 
 for (uniprot.id in uniprot.ids) {
-  count_overlaps(clf.ipr.matches.overlap.db_rbp %>% filter(Uniprot.ID == uniprot.id))
+  count_overlaps(clf.ipr.matches.overlap.cbp_rbp %>% filter(Uniprot.ID == uniprot.id))
 }
 
 # Cluster InterPro entries by overlaps
@@ -1016,7 +1112,7 @@ lead.ipr.table = data.frame(lead.ipr = unlist(parent),
                             ipr.accession = names(parent),
                             stringsAsFactors = F) %>%
   arrange(lead.ipr) %>%
-  left_join(clf.ipr.matches.overlap.db_rbp %>%
+  left_join(clf.ipr.matches.overlap.cbp_rbp %>%
               dplyr::select(ipr.accession,
                             ipr.description) %>%
               distinct(),
@@ -1114,7 +1210,7 @@ Hence, we have `r nrow(clf.unmatched.peptides)` unmatched peptides from SPACEmap
 First, apply our clusterisation to the main table with matched CLА peptides from DNA- and RNA-binding proteins:
 
 ```{r, include=T}
-clf.ipr.matches.overlap.db_rbp.collated = clf.ipr.matches.overlap.db_rbp %>%
+clf.ipr.matches.overlap.cbp_rbp.collated = clf.ipr.matches.overlap.cbp_rbp %>%
   mutate(ipr.accession = ifelse(ipr.accession == "", "disordered_region", ipr.accession)) %>%
   mutate(ipr.description = ifelse(ipr.description == "", "disordered_region", ipr.description)) %>%
   left_join(ipr.cluster.table %>%
@@ -1130,14 +1226,14 @@ Secondly, generate tables with the frequencies of proteins and peptides with dif
 For the DNA-binding proteins (Fig. 3E; Fig. S3E, left):
 
 ```{r, include=T, fig.height=5, fig.width=5}
-uniprotid.db.total.num.collated.db = clf.ipr.matches.overlap.db_rbp.collated %>% 
-  filter(Category == "DB") %>%
+uniprotid.db.total.num.collated.db = clf.ipr.matches.overlap.cbp_rbp.collated %>% 
+  filter(is.cbp) %>%
   pull(Uniprot.ID) %>%
   unique() %>%
   length()
 
-clf.ipr.matches.overlap.db_rbp.collated.db_freq = clf.ipr.matches.overlap.db_rbp.collated %>%
-  filter(Category == "DB") %>%
+clf.ipr.matches.overlap.cbp_rbp.collated.db_freq = clf.ipr.matches.overlap.cbp_rbp.collated %>%
+  filter(is.cbp) %>%
   group_by(ipr.description) %>%
   mutate(uniprotid.n = length(unique(Uniprot.ID))) %>%
   mutate(uniprotid.freq = uniprotid.n / uniprotid.db.total.num.collated.db) %>%
@@ -1146,13 +1242,13 @@ clf.ipr.matches.overlap.db_rbp.collated.db_freq = clf.ipr.matches.overlap.db_rbp
   dplyr::select(ipr.accession, ipr.description, uniprotid.n, uniprotid.freq) %>%
   distinct()
 
-write.table(clf.ipr.matches.overlap.db_rbp.collated.db_freq,
+write.table(clf.ipr.matches.overlap.cbp_rbp.collated.db_freq,
             "output/clf_db_protein_match_frequencies.tsv",
             quote = F,
             sep = "\t",
             row.names = F)
 
-clf.ipr.matches.overlap.db_rbp.collated.db_freq %>%
+clf.ipr.matches.overlap.cbp_rbp.collated.db_freq %>%
   head(10) %>%
   mutate(ipr.description = factor(ipr.description, levels = ipr.description)) %>%
   mutate(uniprotid.freq = uniprotid.freq * 100) %>%
@@ -1166,14 +1262,14 @@ clf.ipr.matches.overlap.db_rbp.collated.db_freq %>%
 For the RNA-binding proteins (Fig. 3D; Fig. S3D, left):
 
 ```{r, include=T, fig.height=5, fig.width=5}
-uniprotid.db.total.num.collated.rbp = clf.ipr.matches.overlap.db_rbp.collated %>% 
-  filter(RBP == "RBP") %>%
+uniprotid.db.total.num.collated.rbp = clf.ipr.matches.overlap.cbp_rbp.collated %>% 
+  filter(is.rbp) %>%
   pull(Uniprot.ID) %>%
   unique() %>%
   length()
 
-clf.ipr.matches.overlap.db_rbp.collated.rbp_freq = clf.ipr.matches.overlap.db_rbp.collated %>%
-  filter(RBP == "RBP") %>%
+clf.ipr.matches.overlap.cbp_rbp.collated.rbp_freq = clf.ipr.matches.overlap.cbp_rbp.collated %>%
+  filter(is.rbp) %>%
   group_by(ipr.description) %>%
   mutate(uniprotid.n = length(unique(Uniprot.ID))) %>%
   mutate(uniprotid.freq = uniprotid.n / uniprotid.db.total.num.collated.rbp) %>%
@@ -1185,13 +1281,13 @@ clf.ipr.matches.overlap.db_rbp.collated.rbp_freq = clf.ipr.matches.overlap.db_rb
                                   "Disordered region",
                                   ipr.description))
 
-write.table(clf.ipr.matches.overlap.db_rbp.collated.rbp_freq,
+write.table(clf.ipr.matches.overlap.cbp_rbp.collated.rbp_freq,
             "output/clf_rbp_protein_match_frequencies.tsv",
             quote = F,
             sep = "\t",
             row.names = F)
 
-clf.ipr.matches.overlap.db_rbp.collated.rbp_freq %>%
+clf.ipr.matches.overlap.cbp_rbp.collated.rbp_freq %>%
   head(10) %>%
   mutate(ipr.description = factor(ipr.description, levels = ipr.description)) %>%
   mutate(uniprotid.freq = uniprotid.freq * 100) %>%
@@ -1205,8 +1301,8 @@ clf.ipr.matches.overlap.db_rbp.collated.rbp_freq %>%
 For the peptides from DNA-binding proteins (Fig. S3E, right):
 
 ```{r, include=T, fig.height=5, fig.width=5}
-uniprotid.db.total.num.collated.db.peptides = clf.ipr.matches.overlap.db_rbp.collated %>% 
-  filter(Category == "DB") %>%
+uniprotid.db.total.num.collated.db.peptides = clf.ipr.matches.overlap.cbp_rbp.collated %>% 
+  filter(is.cbp) %>%
   dplyr::select(Uniprot.ID,
                 Sequence,
                 N.term.cleavage.window,
@@ -1214,8 +1310,8 @@ uniprotid.db.total.num.collated.db.peptides = clf.ipr.matches.overlap.db_rbp.col
   distinct() %>%
   nrow()
 
-clf.ipr.matches.overlap.db_rbp.collated.db_freq.peptides = clf.ipr.matches.overlap.db_rbp.collated %>%
-  filter(Category == "DB") %>%
+clf.ipr.matches.overlap.cbp_rbp.collated.db_freq.peptides = clf.ipr.matches.overlap.cbp_rbp.collated %>%
+  filter(is.cbp) %>%
   group_by(Uniprot.ID, 
            Sequence, 
            N.term.cleavage.window, 
@@ -1234,13 +1330,13 @@ clf.ipr.matches.overlap.db_rbp.collated.db_freq.peptides = clf.ipr.matches.overl
   dplyr::select(ipr.accession, ipr.description, peptide.id.n, peptide.id.freq) %>%
   distinct()
 
-write.table(clf.ipr.matches.overlap.db_rbp.collated.db_freq.peptides,
+write.table(clf.ipr.matches.overlap.cbp_rbp.collated.db_freq.peptides,
             "output/clf_db_peptide_match_frequencies.tsv",
             quote = F,
             sep = "\t",
             row.names = F)
 
-clf.ipr.matches.overlap.db_rbp.collated.db_freq.peptides %>%
+clf.ipr.matches.overlap.cbp_rbp.collated.db_freq.peptides %>%
   head(10) %>%
   mutate(ipr.description = factor(ipr.description, levels = ipr.description)) %>%
   mutate(peptide.id.freq = peptide.id.freq * 100) %>%
@@ -1254,8 +1350,8 @@ clf.ipr.matches.overlap.db_rbp.collated.db_freq.peptides %>%
 For the peptides from RNA-binding proteins (Fig. S3D, right):
 
 ```{r, include=T, fig.height=5, fig.width=5}
-uniprotid.db.total.num.collated.rbp.peptides = clf.ipr.matches.overlap.db_rbp.collated %>% 
-  filter(RBP == "RBP") %>%
+uniprotid.db.total.num.collated.rbp.peptides = clf.ipr.matches.overlap.cbp_rbp.collated %>% 
+  filter(is.rbp) %>%
   dplyr::select(Uniprot.ID,
                 Sequence,
                 N.term.cleavage.window,
@@ -1263,8 +1359,8 @@ uniprotid.db.total.num.collated.rbp.peptides = clf.ipr.matches.overlap.db_rbp.co
   distinct() %>%
   nrow()
 
-clf.ipr.matches.overlap.db_rbp.collated.rbp_freq.peptides = clf.ipr.matches.overlap.db_rbp.collated %>%
-  filter(RBP == "RBP") %>%
+clf.ipr.matches.overlap.cbp_rbp.collated.rbp_freq.peptides = clf.ipr.matches.overlap.cbp_rbp.collated %>%
+  filter(is.rbp) %>%
   group_by(Uniprot.ID, 
            Sequence, 
            N.term.cleavage.window, 
@@ -1283,13 +1379,13 @@ clf.ipr.matches.overlap.db_rbp.collated.rbp_freq.peptides = clf.ipr.matches.over
   dplyr::select(ipr.accession, ipr.description, peptide.id.n, peptide.id.freq) %>%
   distinct()
 
-write.table(clf.ipr.matches.overlap.db_rbp.collated.rbp_freq.peptides,
+write.table(clf.ipr.matches.overlap.cbp_rbp.collated.rbp_freq.peptides,
             "output/clf_rbp_peptide_match_frequencies.tsv",
             quote = F,
             sep = "\t",
             row.names = F)
 
-clf.ipr.matches.overlap.db_rbp.collated.rbp_freq.peptides %>%
+clf.ipr.matches.overlap.cbp_rbp.collated.rbp_freq.peptides %>%
   head(10) %>%
   mutate(ipr.description = factor(ipr.description, levels = ipr.description)) %>%
   mutate(peptide.id.freq = peptide.id.freq * 100) %>%
@@ -1317,21 +1413,21 @@ Take top 5 structural domain types (the general clusters that we found above) in
 ```{r, include=T}
 # Select top 5 matched domain types from DBPs and RBPs, and merge these domain types in one set.
 # Let us exclude disordered region matches as here we are interested in domains.
-top.matched.domains = unique(c(clf.ipr.matches.overlap.db_rbp.collated.db_freq %>%
+top.matched.domains = unique(c(clf.ipr.matches.overlap.cbp_rbp.collated.db_freq %>%
                                  arrange(desc(uniprotid.freq)) %>%
                                  head(6) %>% # 5 without IDRs
                                  pull(ipr.description),
-                               clf.ipr.matches.overlap.db_rbp.collated.rbp_freq %>%
+                               clf.ipr.matches.overlap.cbp_rbp.collated.rbp_freq %>%
                                  arrange(desc(uniprotid.freq)) %>%
                                  head(6) %>% # 5 without IDRs
                                  pull(ipr.description)))
 
-freq.in.dbp_rbp = clf.ipr.matches.overlap.db_rbp.collated.db_freq %>%
+freq.in.dbp_rbp = clf.ipr.matches.overlap.cbp_rbp.collated.db_freq %>%
   filter(ipr.description %in% top.matched.domains) %>%
   dplyr::rename("uniprotid.n.dbp" = "uniprotid.n",
                 "uniprotid.freq.dbp" = "uniprotid.freq") %>%
   dplyr::select(-ipr.accession) %>%
-  dplyr::full_join(clf.ipr.matches.overlap.db_rbp.collated.rbp_freq %>%
+  dplyr::full_join(clf.ipr.matches.overlap.cbp_rbp.collated.rbp_freq %>%
                      filter(ipr.description %in% top.matched.domains) %>%
                      dplyr::rename("uniprotid.n.rbp" = "uniprotid.n",
                                    "uniprotid.freq.rbp" = "uniprotid.freq") %>%
@@ -1653,7 +1749,7 @@ clf.peptides.coord = annot.table %>%
                 Category,
                 RBP) %>%
   filter(!is.na(Sequence)) %>%
-  filter(Category == "DB" | RBP == "RBP") %>%
+  filter(is.cbp | is.rbp) %>%
   distinct()
 
 match.vicinity = 10 # amino acids
@@ -1726,7 +1822,7 @@ Compare the frequencies of Domain-, IDR- and (Domain+IDR)-matching and unmatched
 clf.peptides.matches.stratified = clf.peptides.matches
 
 peptides.matched.domain_dna_related.n.db = clf.peptides.matches.stratified %>% 
-  filter(Category == "DB") %>%
+  filter(is.cbp) %>%
   filter(matched == "Domain, DNA-related") %>%
   dplyr::select(Uniprot.ID, 
                 Sequence, 
@@ -1736,7 +1832,7 @@ peptides.matched.domain_dna_related.n.db = clf.peptides.matches.stratified %>%
   nrow()
 
 peptides.matched.domain_other.n.db = clf.peptides.matches.stratified %>% 
-  filter(Category == "DB") %>%
+  filter(is.cbp) %>%
   filter(matched == "Domain, Other") %>%
   dplyr::select(Uniprot.ID, 
                 Sequence, 
@@ -1746,7 +1842,7 @@ peptides.matched.domain_other.n.db = clf.peptides.matches.stratified %>%
   nrow()
 
 peptides.matched.domain_both.n.db = clf.peptides.matches.stratified %>% 
-  filter(Category == "DB") %>%
+  filter(is.cbp) %>%
   filter(matched == "Domain, DNA-related + Other") %>%
   dplyr::select(Uniprot.ID, 
                 Sequence, 
@@ -1756,7 +1852,7 @@ peptides.matched.domain_both.n.db = clf.peptides.matches.stratified %>%
   nrow()
 
 peptides.matched.domain_dna_related.n.rbp = clf.peptides.matches.stratified %>% 
-  filter(RBP == "RBP") %>%
+  filter(is.rbp) %>%
   filter(matched == "Domain, DNA-related") %>%
   dplyr::select(Uniprot.ID, 
                 Sequence, 
@@ -1766,7 +1862,7 @@ peptides.matched.domain_dna_related.n.rbp = clf.peptides.matches.stratified %>%
   nrow()
 
 peptides.matched.domain_other.n.rbp = clf.peptides.matches.stratified %>% 
-  filter(RBP == "RBP") %>%
+  filter(is.rbp) %>%
   filter(matched == "Domain, Other") %>%
   dplyr::select(Uniprot.ID, 
                 Sequence, 
@@ -1776,7 +1872,7 @@ peptides.matched.domain_other.n.rbp = clf.peptides.matches.stratified %>%
   nrow()
 
 peptides.matched.domain_both.n.rbp = clf.peptides.matches.stratified %>% 
-  filter(RBP == "RBP") %>%
+  filter(is.rbp) %>%
   filter(matched == "Domain, DNA-related + Other") %>%
   dplyr::select(Uniprot.ID, 
                 Sequence, 
@@ -1786,7 +1882,7 @@ peptides.matched.domain_both.n.rbp = clf.peptides.matches.stratified %>%
   nrow()
 
 peptides.matched.idr.n.db = clf.peptides.matches.stratified %>% 
-  filter(Category == "DB") %>%
+  filter(is.cbp) %>%
   filter(matched == "IDR") %>%
   dplyr::select(Uniprot.ID, 
                 Sequence, 
@@ -1796,7 +1892,7 @@ peptides.matched.idr.n.db = clf.peptides.matches.stratified %>%
   nrow()
 
 peptides.matched.idr.n.rbp = clf.peptides.matches.stratified %>% 
-  filter(RBP == "RBP") %>%
+  filter(is.rbp) %>%
   filter(matched == "IDR") %>%
   dplyr::select(Uniprot.ID, 
                 Sequence, 
@@ -1806,7 +1902,7 @@ peptides.matched.idr.n.rbp = clf.peptides.matches.stratified %>%
   nrow()
 
 peptides.matched.domain_idr.n.db = clf.peptides.matches.stratified %>% 
-  filter(Category == "DB") %>%
+  filter(is.cbp) %>%
   filter(matched == "Domain+IDR") %>%
   dplyr::select(Uniprot.ID, 
                 Sequence, 
@@ -1816,7 +1912,7 @@ peptides.matched.domain_idr.n.db = clf.peptides.matches.stratified %>%
   nrow()
 
 peptides.matched.domain_idr.n.rbp = clf.peptides.matches.stratified %>% 
-  filter(RBP == "RBP") %>%
+  filter(is.rbp) %>%
   filter(matched == "Domain+IDR") %>%
   dplyr::select(Uniprot.ID, 
                 Sequence, 
@@ -1826,7 +1922,7 @@ peptides.matched.domain_idr.n.rbp = clf.peptides.matches.stratified %>%
   nrow()
 
 peptides.matched.none.n.db = clf.peptides.matches.stratified %>% 
-  filter(Category == "DB") %>%
+  filter(is.cbp) %>%
   filter(matched == "None") %>%
   dplyr::select(Uniprot.ID, 
                 Sequence, 
@@ -1836,7 +1932,7 @@ peptides.matched.none.n.db = clf.peptides.matches.stratified %>%
   nrow()
 
 peptides.matched.none.n.rbp = clf.peptides.matches.stratified %>% 
-  filter(RBP == "RBP") %>%
+  filter(is.rbp) %>%
   filter(matched == "None") %>%
   dplyr::select(Uniprot.ID, 
                 Sequence, 
@@ -1846,7 +1942,7 @@ peptides.matched.none.n.rbp = clf.peptides.matches.stratified %>%
   nrow()
 
 peptides.matched.all.n.db = clf.peptides.matches.stratified %>% 
-  filter(Category == "DB") %>%
+  filter(is.cbp) %>%
   dplyr::select(Uniprot.ID, 
                 Sequence, 
                 N.term.cleavage.window, 
@@ -1855,7 +1951,7 @@ peptides.matched.all.n.db = clf.peptides.matches.stratified %>%
   nrow()
 
 peptides.matched.all.n.rbp = clf.peptides.matches.stratified %>% 
-  filter(RBP == "RBP") %>%
+  filter(is.rbp) %>%
   dplyr::select(Uniprot.ID, 
                 Sequence, 
                 N.term.cleavage.window, 
@@ -2036,7 +2132,7 @@ Select DBPs with known DBDs:
 
 ```{r, include=T}
 clf.ipr.matches.base.dbd_matches = clf.ipr.matches.base %>%
-  filter(Category == "DB") %>%
+  filter(is.cbp) %>%
   filter(ipr.accession %in% dbd.table$ipr_accession) %>%
   mutate(int.start = as.integer(int.start),
          int.stop = as.integer(int.stop)) %>%
@@ -2085,7 +2181,7 @@ Check DBPs where known DBDs are not matched by CLF peptides:
 
 ```{r, include=T}
 unmatched.proteins.other_matches = clf.ipr.matches.base %>%
-  filter(Category == "DB") %>%
+  filter(is.cbp) %>%
   filter(Uniprot.ID %in% unmatched.proteins) %>%
   mutate(int.start = as.integer(int.start),
          int.stop = as.integer(int.stop)) %>%
@@ -2268,7 +2364,7 @@ Check the total number of DBPs and the number of DBPs with known (classical) DBD
 ```{r, include=T}
 cat("Total number of DBPs:", 
     clf.ipr.matches.base %>% 
-      filter(Category == "DB") %>%
+      filter(is.cbp) %>%
       pull(Uniprot.ID) %>%
       unique() %>%
       length(), 
@@ -2276,7 +2372,7 @@ cat("Total number of DBPs:",
 
 cat("Number of DBPs with classical DBDs:", 
     clf.ipr.matches.base %>% 
-      filter(Category == "DB") %>%
+      filter(is.cbp) %>%
       filter(ipr.accession %in% dbd.table$ipr_accession) %>%
       pull(Uniprot.ID) %>%
       unique() %>%
@@ -2294,7 +2390,7 @@ proteins.with.dbds = clf.ipr.matches.base.dbd_matches %>%
   unique()
 
 clf.ipr.matches.base %>% 
-  filter(Category == "DB") %>%
+  filter(is.cbp) %>%
   filter(!Uniprot.ID %in% proteins.with.dbds) %>%
   dplyr::count(Uniprot.ID, ipr.accession, ipr.description) %>%
   distinct() %>%
