@@ -67,7 +67,9 @@ library(seqinr)
 #   group_by(seq.id) %>%
 #   mutate(uniprot.id = unlist(stringr::str_split(seq.id, fixed("|")))[2]) %>%
 #   ungroup() %>%
-#   filter(uniprot.id %in% space.new$Uniprot.ID)
+#   filter(uniprot.id %in% space.new$Uniprot.ID) %>%
+#   dplyr::select(-uniprot.id) %>%
+#   mutate(V10 = ifelse(V10, "T", "F"))
 # 
 # write.table(released.scan.table.new,
 #             "input/Released_fraction.txt_overlapped_with_SPACE.fa.tsv",
@@ -75,7 +77,7 @@ library(seqinr)
 #             sep = "\t",
 #             row.names = F,
 #             col.names = F)
-# 
+#
 # # Filter FASTA with released protein sequences
 # released.fasta.old = read.delim("input/prev/Released_fraction.txt_overlapped_with_SPACE.fa",
 #                                 header = F)
@@ -553,7 +555,7 @@ Draw matches for the example protein (A2A4P0):
 draw_peptides("A2A4P0")
 ```
 
-Now we have `r clf.ipr.matches.overlap %>% filter(ipr.accession != "") %>% dplyr::select(Uniprot.ID, ipr.accession, int.start, int.stop) %>% distinct() %>% nrow()` domain matches and `r clf.ipr.matches.overlap %>% filter(ipr.accession == "") %>% dplyr::select(Uniprot.ID, int.start, int.stop) %>% distinct() %>% nrow()` predicted disordered regions overlapping with `r clf.ipr.matches.overlap %>% dplyr::select(Uniprot.ID, Sequence, N.term.cleavage.window, C.term.cleavage.window) %>% distinct() %>% nrow()` peptides (or residing no father than 10 amino acids from them) from `r clf.ipr.matches.overlap %>% pull(Uniprot.ID) %>% unique() %>% length()` proteins.
+Now we have `r clf.ipr.matches.overlap %>% filter(ipr.accession != "") %>% dplyr::select(Uniprot.ID, ipr.accession, int.start, int.stop) %>% distinct() %>% nrow()` domain matches and `r clf.ipr.matches.overlap %>% filter(ipr.accession == "") %>% dplyr::select(Uniprot.ID, int.start, int.stop) %>% distinct() %>% nrow()` predicted disordered regions overlapping with `r clf.ipr.matches.overlap %>% dplyr::select(Uniprot.ID, Sequence, N.term.cleavage.window, C.term.cleavage.window) %>% distinct() %>% nrow()` peptides (or residing no farther than 10 amino acids from them) from `r clf.ipr.matches.overlap %>% pull(Uniprot.ID) %>% unique() %>% length()` proteins.
 
 ## Generate SPACEmap vs SPACE stats
 
@@ -596,7 +598,7 @@ sp.sp2.intersection.peptides.matched = sp.sp2.intersection.peptides %>%
   distinct()
 ```
 
-Hence, the proportion of matched peptides in all shared proteins is `r nrow(sp.sp2.intersection.peptides.matched) / nrow(sp.sp2.intersection.peptides)`.
+There are `r length(space.proteins)` SPACE proteins and `r length(spacemap.proteins)` SPACEmap proteins. SPACE and SPACEmap have `r length(sp.sp2.intersection.proteins)` proteins in common. `r nrow(sp.sp2.intersection.peptides)` peptides come from the shared proteins, and `r nrow(sp.sp2.intersection.peptides.matched)` of these peptides match at least one domain or IDR. Hence, the proportion of matched peptides among all peptides from the shared proteins is `r nrow(sp.sp2.intersection.peptides.matched) / nrow(sp.sp2.intersection.peptides)`.
 
 Write down the tables of shared peptides (all and matched):
 
@@ -689,7 +691,7 @@ rf.ipr.matches = read.delim("input/Released_fraction.txt_overlapped_with_SPACE.f
                                            "ipr.accession",
                                            "ipr.description")) %>%
   filter(status == "T") %>%
-  # Select domains that are integrated into InterPro (ipr.accession != "") and 
+  # Select domains that are integrated into InterPro (ipr.accession != "") and
   # disordered regions (db == "MobiDBLite"; they have empty ipr.accession)
   filter((ipr.accession != "") | (db == "MobiDBLite")) %>%
   # Parse the protein sequence headers and take the Uniprot IDs
@@ -723,7 +725,7 @@ rf.ipr.matches = read.delim("input/Released_fraction.txt_overlapped_with_SPACE.f
 
 We have `r rf.ipr.matches %>% filter(ipr.accession != "") %>% distinct() %>% nrow()` domain matches and `r rf.ipr.matches %>% filter(ipr.accession == "") %>% nrow()` predicted disordered regions in `r rf.ipr.matches %>% pull(uniprot.id) %>% unique() %>% length()` proteins.
 
-Next, retain only the peptides from the matched proteins that come from the released fraction and were identified by SPACE:
+Join the InterPro match table for the released fraction with the peptide for the same fraction:
 
 ```{r, include=T}
 peptide.table.rf = read.delim("input/Released_fraction.txt_overlapped_with_SPACE.tsv",
@@ -746,9 +748,7 @@ rf.ipr.matches.base = rf.ipr.matches %>%
             by = c("Uniprot.ID" = "Uniprot.ID"))
 ```
 
-Now we have `r rf.ipr.matches.base %>% filter(ipr.accession != "") %>% dplyr::select(Uniprot.ID, ipr.accession, int.start, int.stop) %>% distinct() %>% nrow()` domain matches and `r rf.ipr.matches.base %>% filter(ipr.accession == "") %>% dplyr::select(Uniprot.ID, int.start, int.stop) %>% distinct() %>% nrow()` predicted disordered region matches in `r rf.ipr.matches.base %>% pull(Uniprot.ID) %>% unique() %>% length()` proteins. The total number of peptides is `r rf.ipr.matches.base %>% dplyr::select(Uniprot.ID, Sequence, N.term.cleavage.window, C.term.cleavage.window) %>% distinct() %>% nrow()`.
-
-Next, take only domain and disordered region matches overlapping with the peptides or residing no farther than 10 amino acids from either side of them:
+Next, take only domain and disordered region matches that overlap with a peptide or reside no farther than 10 amino acids from the ends of a peptide:
 
 ```{r, include=T}
 match.vicinity = 10 # amino acids
@@ -770,7 +770,7 @@ Now we have `r rf.ipr.matches.overlap %>% filter(ipr.accession != "") %>% dplyr:
 
 ## Amino-acid frequencies in matched peptides
 
-Calculate frequencies of amino acids from peptides matched in the crosslinked and released fractions. Do separate calculations for peptides matched to domains and to disordered regions (these two sets of peptides are overlapping, as one and the same peptide could match both to a domain and to a disordered region). Also, calculate frequencies of amino acids in matches in all peptides (the full proteome).
+Calculate frequencies of amino acids from peptides matched in the crosslinked and released fractions. Do separate calculations for peptides matched to domains and to disordered regions (these two sets of peptides may overlap, as one and the same peptide could match both to a domain and to a disordered region). Also, calculate frequencies of amino acids in matches in all peptides (the full proteome).
 
 ```{r, include=T}
 aa.names = c("A", "C", "D", "E", "F", "G", "H", "I", "K", "L", "M", "N", "P", "Q", "R", "S", "T", "V", "W", "Y")
@@ -876,7 +876,7 @@ unique.aa.dict.fp.freq = unlist(purrr::map(unique.aa.dict.fp,
                                                 }))
 ```
 
-Plot the frequencies of amino acids from domain-matching peptides in CLF vs RF (Fig. 3F, left):
+Plot the frequencies of amino acids from domain-matching peptides in CLF vs RF (Fig. 4F, left):
 
 ```{r, include=T}
 data.frame(clf = unique.aa.dict.dom.clf.freq * 100,
@@ -891,7 +891,7 @@ data.frame(clf = unique.aa.dict.dom.clf.freq * 100,
     theme_classic()
 ```
 
-Plot the frequencies of amino acids from disordered region-matching peptides in CLF vs RF (Fig. 3G, left):
+Plot the frequencies of amino acids from disordered region-matching peptides in CLF vs RF (Fig. 4G, left):
 
 ```{r, include=T}
 data.frame(clf = unique.aa.dict.idr.clf.freq * 100,
@@ -906,7 +906,7 @@ data.frame(clf = unique.aa.dict.idr.clf.freq * 100,
     theme_classic()
 ```
 
-Plot the frequencies of amino acids in domain-matching peptides from CLF vs full proteome (Fig. 3F, right):
+Plot the frequencies of amino acids in domain-matching peptides from CLF vs full proteome (Fig. 4F, right):
 
 ```{r, include=T}
 data.frame(clf = unique.aa.dict.dom.clf.freq * 100,
@@ -921,7 +921,7 @@ data.frame(clf = unique.aa.dict.dom.clf.freq * 100,
     theme_classic()
 ```
 
-Plot the frequencies of amino acids in disordered region-matching peptides in CLF vs full proteome (Fig. 3G, right):
+Plot the frequencies of amino acids in disordered region-matching peptides in CLF vs full proteome (Fig. 4G, right):
 
 ```{r, include=T}
 data.frame(clf = unique.aa.dict.idr.clf.freq * 100,
@@ -980,7 +980,7 @@ write.table(clf.ipr.matches.overlap.cbp_rbp.freq,
 
 ## Generalise (cluster) all matched InterPro entries
 
-Do an automatical clusterisation of similar InterPro entries matched in CLF peptides (from DBPs and RBPs) shared between SPACEmap and SPACE: If two InterPro entries co-match at least once and in >=70% of co-matches they overlap by >=70% of their lengths, reciprocally, then we put them in one cluster (generalised entry). To maintain clusters, we use disjoint set union:
+Do an automatical clusterisation of similar InterPro entries matched in CLF peptides (from CBPs and RBPs) shared between SPACEmap and SPACE: If two InterPro entries co-match at least once and in >=70% of co-matches they overlap by >=70% of their lengths, reciprocally, then we put them in one cluster (generalised entry). To maintain clusters, we use disjoint set union:
 
 ```{r, include=T}
 tic("Clusterisation of matched InterPro entries")
@@ -1152,10 +1152,10 @@ Name clusters that are present in the plots below, according to the InterPro ent
 
 ```{r, include=T}
 ipr.cluster.table = ipr.cluster.table %>%
-  mutate(cluster.name = ifelse(cluster.name == "1", "Disordered region", cluster.name)) %>%
-  mutate(cluster.name = ifelse(cluster.name == "481", "P-loop-related", cluster.name)) %>%
+  mutate(cluster.name = ifelse(cluster.name == "1", "Disordered region", cluster.name)) %>% # +
+  mutate(cluster.name = ifelse(cluster.name == "526", "P-loop-related", cluster.name)) %>% # +
   mutate(cluster.name = ifelse(cluster.name == "592", "HTH", cluster.name)) %>%
-  mutate(cluster.name = ifelse(cluster.name == "553", "RRM", cluster.name)) %>%
+  mutate(cluster.name = ifelse(cluster.name == "347", "RRM", cluster.name)) %>% # +
   mutate(cluster.name = ifelse(cluster.name == "293", "C2H2-type ZF", cluster.name)) %>%
   mutate(cluster.name = ifelse(cluster.name == "265", "OB-fold", cluster.name)) %>%
   mutate(cluster.name = ifelse(cluster.name == "551", "RING/FYVE/PHD ZF", cluster.name)) %>%
@@ -1174,7 +1174,7 @@ ipr.cluster.table = ipr.cluster.table %>%
 
 ## Find proportions of matched and unmatched CLF peptides from DNA- and RNA-binding proteins
 
-First, find the number and proportion of all unmatched CLF peptides (from DBPs and RBPs) shared between SPACEmap and SPACE:
+First, find the number and proportion of all unmatched CLF peptides (from CBPs and RBPs) shared between SPACEmap and SPACE:
 
 ```{r, include=T}
 clf.matched.peptides = clf.ipr.matches.base %>%
@@ -1207,7 +1207,7 @@ Hence, we have `r nrow(clf.unmatched.peptides)` unmatched peptides from SPACEmap
 
 ## Find frequencies of cluster matches
 
-First, apply our clusterisation to the main table with matched CLА peptides from DNA- and RNA-binding proteins:
+First, apply our clusterisation to the main table with matched CLF peptides from CBPs and RBPs proteins:
 
 ```{r, include=T}
 clf.ipr.matches.overlap.cbp_rbp.collated = clf.ipr.matches.overlap.cbp_rbp %>%
@@ -1221,34 +1221,34 @@ clf.ipr.matches.overlap.cbp_rbp.collated = clf.ipr.matches.overlap.cbp_rbp %>%
   mutate(ipr.description = cluster.name)
 ```
 
-Secondly, generate tables with the frequencies of proteins and peptides with different matches (plot top 10 by frequency).
+Secondly, generate tables with the frequencies of proteins and peptides with different matches (plot top 10 matches by frequency).
 
-For the DNA-binding proteins (Fig. 3E; Fig. S3E, left):
+For the DNA-binding proteins (Fig. 4E; Fig. S4E, left):
 
 ```{r, include=T, fig.height=5, fig.width=5}
-uniprotid.db.total.num.collated.db = clf.ipr.matches.overlap.cbp_rbp.collated %>% 
+uniprotid.db.total.num.collated.cbp = clf.ipr.matches.overlap.cbp_rbp.collated %>% 
   filter(is.cbp) %>%
   pull(Uniprot.ID) %>%
   unique() %>%
   length()
 
-clf.ipr.matches.overlap.cbp_rbp.collated.db_freq = clf.ipr.matches.overlap.cbp_rbp.collated %>%
+clf.ipr.matches.overlap.cbp_rbp.collated.cbp_freq = clf.ipr.matches.overlap.cbp_rbp.collated %>%
   filter(is.cbp) %>%
   group_by(ipr.description) %>%
   mutate(uniprotid.n = length(unique(Uniprot.ID))) %>%
-  mutate(uniprotid.freq = uniprotid.n / uniprotid.db.total.num.collated.db) %>%
+  mutate(uniprotid.freq = uniprotid.n / uniprotid.db.total.num.collated.cbp) %>%
   ungroup() %>%
   arrange(desc(uniprotid.n)) %>%
   dplyr::select(ipr.accession, ipr.description, uniprotid.n, uniprotid.freq) %>%
   distinct()
 
-write.table(clf.ipr.matches.overlap.cbp_rbp.collated.db_freq,
-            "output/clf_db_protein_match_frequencies.tsv",
+write.table(clf.ipr.matches.overlap.cbp_rbp.collated.cbp_freq,
+            "output/clf_cbp_protein_match_frequencies.tsv",
             quote = F,
             sep = "\t",
             row.names = F)
 
-clf.ipr.matches.overlap.cbp_rbp.collated.db_freq %>%
+clf.ipr.matches.overlap.cbp_rbp.collated.cbp_freq %>%
   head(10) %>%
   mutate(ipr.description = factor(ipr.description, levels = ipr.description)) %>%
   mutate(uniprotid.freq = uniprotid.freq * 100) %>%
