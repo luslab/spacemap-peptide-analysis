@@ -600,6 +600,47 @@ sp.sp2.intersection.peptides.matched = sp.sp2.intersection.peptides %>%
 
 There are `r length(space.proteins)` SPACE proteins and `r length(spacemap.proteins)` SPACEmap proteins. SPACE and SPACEmap have `r length(sp.sp2.intersection.proteins)` proteins in common. `r nrow(sp.sp2.intersection.peptides)` peptides come from the shared proteins, and `r nrow(sp.sp2.intersection.peptides.matched)` of these peptides match at least one domain or IDR. Hence, the proportion of matched peptides among all peptides from the shared proteins is `r nrow(sp.sp2.intersection.peptides.matched) / nrow(sp.sp2.intersection.peptides)`.
 
+```{r}
+annot.table.prev = read.delim("input/prev/mES_enriched_SPACE.tsv", 
+                              header = T,
+                              sep = "\t",
+                              stringsAsFactors = F)
+
+space.proteins.prev = annot.table.prev %>%
+  pull(Uniprot.ID) %>%
+  unique()
+
+sp.sp2.intersection.proteins.prev = intersect(space.proteins.prev, spacemap.proteins)
+
+sp.sp2.intersection.peptides.prev = peptide.table %>%
+  # Take only shared proteins
+  filter(Uniprot.ID %in% sp.sp2.intersection.proteins.prev) %>%
+  # Take all peptides from the shared proteins - these are shared peptides
+  dplyr::select(Uniprot.ID,
+                Sequence, 
+                N.term.cleavage.window,
+                C.term.cleavage.window) %>%
+  distinct()
+
+peptide.table %>%
+  filter(Uniprot.ID %in% setdiff(unique(sp.sp2.intersection.peptides$Uniprot.ID),
+                                 unique(sp.sp2.intersection.peptides.prev$Uniprot.ID))) %>%
+  dplyr::select(Uniprot.ID,
+                Sequence, 
+                N.term.cleavage.window,
+                C.term.cleavage.window) %>%
+  distinct() %>%
+  #arrange(Uniprot.ID)
+  nrow()
+
+# calculate IPRs matched with the previous SPACE table
+# find the difference between the current and the previous set of matched IDRs
+# check that all such IDRs are matched by the peptides from the new SPACE proteins
+
+#clf.ipr.matches.overlap %>%
+  # check that some 
+```
+
 Write down the tables of shared peptides (all and matched):
 
 ```{r, include=T}
