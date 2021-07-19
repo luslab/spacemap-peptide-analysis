@@ -11,3 +11,6 @@ input/prev/interpro82.xml
 input/.~lock*
 prev.output
 prev.output.1
+domain_classification/
+input.tar.gz
+scripts.tar.gz
