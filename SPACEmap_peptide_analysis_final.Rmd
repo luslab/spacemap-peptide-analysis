@@ -602,6 +602,42 @@ write.table(sp.sp2.intersection.peptides.matched %>%
             quote = F,
             sep = "\t",
             row.names = F)
+
+# Matched shared peptides with the match info
+write.table(clf.ipr.matches.overlap %>%
+              dplyr::select(Gene.names,
+                            Protein.names,
+                            Uniprot.ID,
+                            Sequence,
+                            N.term.cleavage.window,
+                            C.term.cleavage.window,
+                            Start.position,
+                            End.position,
+                            int.start,
+                            int.stop,
+                            ipr.accession,
+                            ipr.description) %>%
+              dplyr::rename("Peptide.start" = "Start.position",
+                            "Peptide.stop" = "End.position",
+                            "Match.start" = "int.start",
+                            "Match.stop" = "int.stop",
+                            "InterPro.accession" = "ipr.accession",
+                            "InterPro.description" = "ipr.description") %>%
+              arrange(Gene.names,
+                      Protein.names,
+                      N.term.cleavage.window,
+                      C.term.cleavage.window,
+                      Peptide.start,
+                      Peptide.stop,
+                      Match.start,
+                      Match.stop) %>%
+              mutate(InterPro.description = ifelse(InterPro.description == "",
+                                                   "Disordered region",
+                                                   InterPro.description)),
+            "output/space_spacemap-clf_shared_peptides_matched_with-matches.tsv",
+            quote = F,
+            sep = "\t",
+            row.names = F)
 ```
 
 ## Select only chromatin- and RNA-binding CLF proteins
@@ -734,6 +770,45 @@ rf.ipr.matches.overlap = rf.ipr.matches.base %>%
 ```
 
 Now we have `r rf.ipr.matches.overlap %>% filter(ipr.accession != "") %>% dplyr::select(Uniprot.ID, ipr.accession, int.start, int.stop) %>% distinct() %>% nrow()` domain matches and `r rf.ipr.matches.overlap %>% filter(ipr.accession == "") %>% dplyr::select(Uniprot.ID, int.start, int.stop) %>% distinct() %>% nrow()` predicted disordered regions overlapping with `r rf.ipr.matches.overlap %>% dplyr::select(Uniprot.ID, Sequence, N.term.cleavage.window, C.term.cleavage.window) %>% distinct() %>% nrow()` shared released peptides (or residing no father than 10 amino acids from them) from `r rf.ipr.matches.overlap %>% pull(Uniprot.ID) %>% unique() %>% length()` proteins.
+
+Write down the table of released peptides (shared between SPACE and SPACEmap) and their matches:
+
+```{r, include=T}
+write.table(rf.ipr.matches.overlap %>%
+              dplyr::select(Gene.names,
+                            Protein.names,
+                            Uniprot.ID,
+                            Sequence,
+                            N.term.cleavage.window,
+                            C.term.cleavage.window,
+                            Start.position,
+                            End.position,
+                            int.start,
+                            int.stop,
+                            ipr.accession,
+                            ipr.description) %>% 
+              dplyr::rename("Peptide.start" = "Start.position",
+                            "Peptide.stop" = "End.position",
+                            "Match.start" = "int.start",
+                            "Match.stop" = "int.stop",
+                            "InterPro.accession" = "ipr.accession",
+                            "InterPro.description" = "ipr.description") %>%
+              arrange(Gene.names,
+                      Protein.names,
+                      N.term.cleavage.window,
+                      C.term.cleavage.window,
+                      Peptide.start,
+                      Peptide.stop,
+                      Match.start,
+                      Match.stop) %>%
+              mutate(InterPro.description = ifelse(InterPro.description == "",
+                                                   "Disordered region",
+                                                   InterPro.description)),
+            "output/space_spacemap-rf_shared_peptides_matched_with-matches.tsv",
+            quote = F,
+            sep = "\t",
+            row.names = F)
+```
 
 ## Amino-acid frequencies in matched peptides
 
