@@ -5,8 +5,7 @@
 #SBATCH --mem 8G
 #SBATCH --time 04:00:00
 
-# Please adjust the following module loads to your installations 
-# of Java 11 and Perl 5
+# Please change according to your installations of Java 11 and Perl 5
 module purge
 module load Java/11.0.2 
 module load Perl/5.32.1-GCCcore-10.3.0 
@@ -19,8 +18,7 @@ fasta="../input/SPACEmap_released_fraction_overlap_with_SPACE_protein.fa"
 mkdir -p ../output/interproscan_matches_rf
 mkdir -p ../tmp
 
-# To run the following command, you need to install 
-# InterProScan 5.47-82.0 into ../tools
+# Please change according to your InterProScan installation
 ../tools/interproscan-5.47-82.0/interproscan.sh \
     --output-dir ../output/interproscan_matches_rf \
     --input ${fasta} \
