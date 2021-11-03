@@ -15,9 +15,9 @@ The input files for the analysis are as follows:
 
 - `SPACEmap_released_fraction_overlap_with_SPACE.tsv` - Released peptides from SPACEmap also present in proteins from SPACE.
 
-- `SPACEmap_crosslinked_fraction_overlap_with_SPACE_protein.fa` - Sequences of proteins that have at least one peptide from the SPACEmap crosslinked fraction.
+- `SPACEmap_crosslinked_fraction_overlap_with_SPACE_protein.fa` - Sequences of proteins that have at least one crosslinked peptide from SPACEmap.
 
-- `SPACEmap_released_fraction_overlap_with_SPACE_protein.fa` - Sequences of proteins that have at least one peptide from the SPACEmap released fraction.
+- `SPACEmap_released_fraction_overlap_with_SPACE_protein.fa` - Sequences of proteins that have at least one released peptide from SPACEmap.
 
 - `SPACEmap_crosslinked_fraction_overlap_with_SPACE_protein.fa.tsv` - InterProScan results on `SPACEmap_crosslinked_fraction_overlap_with_SPACE_protein.fa`.
 
