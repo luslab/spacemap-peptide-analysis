@@ -22,3 +22,23 @@ The input files for the analysis are as follows:
 - `SPACEmap_crosslinked_fraction_overlap_with_SPACE_protein.fa.tsv` - InterProScan results on `SPACEmap_crosslinked_fraction_overlap_with_SPACE_protein.fa`.
 
 - `SPACEmap_released_fraction_overlap_with_SPACE_protein.fa.tsv` - InterProScan results on `SPACEmap_released_fraction_overlap_with_SPACE_protein.fa`.
+
+The expected output is as follows:
+
+- `output/interproscan_matches_clf` appears if `scan_clf.sh` was run and contains the results from InterProScan on `SPACEmap_crosslinked_fraction_overlap_with_SPACE_protein.fa`. The expected files are: `SPACEmap_crosslinked_fraction_overlap_with_SPACE_protein.fa.{gff3,json,tsv,xml}`. `SPACEmap_crosslinked_fraction_overlap_with_SPACE_protein.fa.tsv` is copied over to `input` and used in the analysis.
+
+- `output/interproscan_matches_rf` appears if `scan_rf.sh` was run and contains the results from InterProScan on `SPACEmap_released_fraction_overlap_with_SPACE_protein.fa`. The expected files are: `SPACEmap_released_fraction_overlap_with_SPACE_protein.fa.{gff3,json,tsv,xml}`. `SPACEmap_released_fraction_overlap_with_SPACE_protein.fa.tsv` is copied over to `input` and used in the analysis.
+
+- `output/plots` contains the following PDF files:
+    - `Fig_4B_upper_bar.pdf`
+    - `Fig_4B_lower_bar.pdf`
+    - `Fig_4D_S4D-left.pdf`
+    - `Fig_4E_S4E-left.pdf`
+    - `Fig_4F_left.pdf`
+    - `Fig_4F_right.pdf`
+    - `Fig_4G_left.pdf`
+    - `Fig_4G_right.pdf`
+    - `Fig_S4E-right.pdf`
+    - `Fig_S4F_draft_all_matches.pdf`
+    - `Fig_S4D-right.pdf`
+    - `Fig_S4G_draft_peptides.pdf`
