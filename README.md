@@ -30,15 +30,15 @@ The expected output is as follows:
 - `output/interproscan_matches_rf` appears if `scan_rf.sh` was run and contains the results from InterProScan on `SPACEmap_released_fraction_overlap_with_SPACE_protein.fa`. The expected files are: `SPACEmap_released_fraction_overlap_with_SPACE_protein.fa.{gff3,json,tsv,xml}`. `SPACEmap_released_fraction_overlap_with_SPACE_protein.fa.tsv` is copied over to `input` and used in the analysis.
 
 - `output/plots` contains the following PDF files:
-    - `Fig_4B_upper_bar.pdf`
-    - `Fig_4B_lower_bar.pdf`
-    - `Fig_4D_S4D-left.pdf`
-    - `Fig_4E_S4E-left.pdf`
-    - `Fig_4F_left.pdf`
-    - `Fig_4F_right.pdf`
-    - `Fig_4G_left.pdf`
-    - `Fig_4G_right.pdf`
-    - `Fig_S4E-right.pdf`
-    - `Fig_S4F_draft_all_matches.pdf`
-    - `Fig_S4D-right.pdf`
-    - `Fig_S4G_draft_peptides.pdf`
+    - `Fig_4B_upper_bar.pdf` - The upper bar for Fig. 4B.
+    - `Fig_4B_lower_bar.pdf` - The lower bar for Fig. 4B.
+    - `Fig_4D_S4D-left.pdf` - The bar plot for Supplementary Fig. 4D, left, whose top 5 bars are used for Fig. 4D.
+    - `Fig_4E_S4E-left.pdf` - The bar plot for Supplementary Fig. 4E, left, whose top 5 bars are used for Fig. 4E.
+    - `Fig_4F_left.pdf` - The scatter plot for Fig. 4F, left.
+    - `Fig_4F_right.pdf` - The scatter plot for Fig. 4F, right.
+    - `Fig_4G_left.pdf` - The scatter plot for Fig. 4G, left.
+    - `Fig_4G_right.pdf` - The scatter plot for Fig. 4G, right.
+    - `Fig_S4D-right.pdf` - The bar plot for Supplementary Fig. 4D, right.
+    - `Fig_S4E-right.pdf` - The bar plot for Supplementary Fig. 4E, right.
+    - `Fig_S4F_draft_all_matches.pdf` - A draft plot of matches for the first step in Supplementary Fig. 4F.
+    - `Fig_S4G_draft_peptides.pdf` - A draft plot of peptides in the protein sequence for Supplementary Fig. 4G.
