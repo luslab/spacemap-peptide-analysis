@@ -1,7 +1,7 @@
 # spacemap-peptide-analysis
 Data analysis for the SPACEmap experiment from [Rafiee et al., 2020](https://www.biorxiv.org/content/10.1101/2020.07.13.200212v6).
 
-To reproduce the analysis, please run `scripts/SPACEmap_peptide_analysis_final.Rmd`. It will calculate the numbers of proteins and peptides for the panel Fig. 4B and plot the bars for it. It will also plot Fig. 4D-G, Supplementary Fig. 4D-E and raw images for Supplementary Fig. 4F-G. Finally, it will generate the following spreadsheets from the Supplementary Table 2 (in the `tsv` format): "Peptides mapped to a region," "SPACEmap-crosslinked peptides," and "Clustered domains." It will create an `output` directory alongside the `input` and `scripts` directories and put the plots and the spreadsheets in the `output`. You will need to install R packages included at the beginning of this R notebook. We used the following version:
+To reproduce the analysis, please run `scripts/SPACEmap_peptide_analysis_final.Rmd`. It will calculate the numbers of proteins and peptides for the panel Fig. 4B and plot the bars for it. It will also plot Fig. 4D-G, Supplementary Fig. 4D-E and raw images for Supplementary Fig. 4F-G. Finally, it will generate the following spreadsheets from the Supplementary Table 2 (in the `tsv` format): "Peptides mapped to a region," "SPACEmap-crosslinked peptides," and "Clustered domains." It will create an `output` directory alongside the `input` and `scripts` directories and put the plots and the spreadsheets in the `output`. You will need to install R packages included at the beginning of this R notebook. We used the following versions:
 
 - `dplyr`: 1.0.3
 
@@ -66,6 +66,6 @@ The expected output is as follows:
     - `Fig_S4G_draft_peptides.pdf` - A draft plot of peptides in the protein sequence for Supplementary Fig. 4G.
 
 - `output/tables` contains the following TSV files:
-    - `Supplementary_Table2_Clustered_domains.tsv` - Spreadsheet "Clustered_domains" from Supplementary Table 2.
-    - `Supplementary_Table2_Peptides_mapped_to_a_region.tsv` - Spreadsheet "Peptides_mapped_to_a_region" from Supplementary Table 2.
-    - `Supplementary_Table2_SPACEmap-crosslinked_peptides.tsv` - Spreadsheet "SPACEmap-crosslinked_peptide" from Supplementary Table 2.
+    - `Supplementary_Table2_Clustered_domains.tsv` - Spreadsheet "Clustered domains" from Supplementary Table 2.
+    - `Supplementary_Table2_Peptides_mapped_to_a_region.tsv` - Spreadsheet "Peptides mapped to a region" from Supplementary Table 2.
+    - `Supplementary_Table2_SPACEmap-crosslinked_peptides.tsv` - Spreadsheet "SPACEmap-crosslinked peptide" from Supplementary Table 2.
