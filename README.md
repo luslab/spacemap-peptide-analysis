@@ -64,3 +64,8 @@ The expected output is as follows:
     - `Fig_S4E-right.pdf` - The bar plot for Supplementary Fig. 4E, right.
     - `Fig_S4F_draft_all_matches.pdf` - A draft plot of matches for the first step in Supplementary Fig. 4F.
     - `Fig_S4G_draft_peptides.pdf` - A draft plot of peptides in the protein sequence for Supplementary Fig. 4G.
+
+- `output/tables` contains the following TSV files:
+    - `Supplementary_Table2_Clustered_domains.tsv` - Spreadsheet "Clustered_domains" from Supplementary Table 2.
+    - `Supplementary_Table2_Peptides_mapped_to_a_region.tsv` - Spreadsheet "Peptides_mapped_to_a_region" from Supplementary Table 2.
+    - `Supplementary_Table2_SPACEmap-crosslinked_peptides.tsv` - Spreadsheet "SPACEmap-crosslinked_peptide" from Supplementary Table 2.
