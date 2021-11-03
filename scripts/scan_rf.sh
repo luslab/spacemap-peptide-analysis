@@ -24,3 +24,5 @@ mkdir -p ../tmp
     --input ${fasta} \
     --iprlookup \
     --tempdir ../tmp
+
+cp ../output/interproscan_matches_rf/SPACEmap_released_fraction_overlap_with_SPACE_protein.fa.tsv ../input
