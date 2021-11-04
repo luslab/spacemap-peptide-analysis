@@ -634,7 +634,7 @@ write.table(sp.sp2.intersection.peptides.matched %>%
                             Intensity.RF_R2,
                             Intensity.RF_R3) %>%
               arrange(Sequence),
-            "output/tables/Supplementary_Table2_Peptides_mapped_to_a_region.tsv",
+            "output/tables/Supplementary_Table2_Figure_4B_mapped_peptides.tsv",
             quote = F,
             sep = "\t",
             row.names = F)
@@ -706,7 +706,7 @@ clf.ipr.matches.overlap.categories = clf.ipr.matches.overlap %>%
                                        InterPro.description))
 
 write.table(clf.ipr.matches.overlap.categories,
-            "output/tables/Supplementary_Table2_SPACEmap-crosslinked_peptides.tsv",
+            "output/tables/Supplementary_Table2_Figure_4B-E_mapping_details.tsv",
             quote = F,
             sep = "\t",
             row.names = F)
