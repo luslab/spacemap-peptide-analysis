@@ -67,5 +67,5 @@ The expected output is as follows:
 
 - `output/tables` contains the following TSV files:
     - `Supplementary_Table2_Clustered_domains.tsv` - Spreadsheet "Clustered domains" from Supplementary Table 2.
-    - `Supplementary_Table2_Peptides_mapped_to_a_region.tsv` - Spreadsheet "Peptides mapped to a region" from Supplementary Table 2.
-    - `Supplementary_Table2_SPACEmap-crosslinked_peptides.tsv` - Spreadsheet "SPACEmap-crosslinked peptide" from Supplementary Table 2.
+    - `Supplementary_Table2_Figure_4B_mapped_peptides.tsv` - Spreadsheet "Figure 4B, mapped peptides" from Supplementary Table 2.
+    - `Supplementary_Table2_Figure_4B-E_mapping_details.tsv` - Spreadsheet "Figure 4B-E mapping details" from Supplementary Table 2.
